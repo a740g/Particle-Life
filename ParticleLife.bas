@@ -48,10 +48,6 @@ Type UIType
     exitButton As Long
 End Type
 
-Declare CustomType Library
-    Function GetTicks&&
-End Declare
-
 
 Dim Shared UI As UIType ' user interface controls
 Dim Shared Universe As UniverseType ' Universe

@@ -9,13 +9,8 @@ $If COMMON_BI = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------
     ' METACOMMANDS
     '-----------------------------------------------------------------------------------------------------
-    $if COMMON_LIBRARY = UNDEFINED Then
-        ' We don't want an underscore prefix as we are writing this from scratch.
-        ' Leading underscores are ugly. However, this will only be enabled if COMMON_LIBRARY is undefined
-        ' COMMON_LIBRARY should be defined when developing libraries
-        ' This will ensure the library works even if $NoPrefix is used
-        $NoPrefix
-    $End If
+    ' We don't want an underscore prefix when writing new code. Leading underscores are ugly.
+    $NoPrefix
 
     ' All identifiers must default to long (32-bits). This results in fastest code execution on x86 & x64
     DefLng A-Z
