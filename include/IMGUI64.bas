@@ -1,11 +1,11 @@
 '---------------------------------------------------------------------------------------------------------
 ' QB64-PE Immediate mode GUI Library
 '
-' Based on Terry Ritchie's work: GLINPUT, RQBL
-' Note this a unification of the above libraries with an input manager and a focus on immediate mode UI
+' This is very loosely based on Terry Ritchie's work: GLINPUT, RQBL
+' Note that this library has an input manager and a focus on immediate mode UI
 ' Which means all UI rendering is destructive and the framebuffer needs to be redrawn every frame
 ' As such lot of things have changed and this will not work as a drop-in replacement for Terry's libraries
-' This was born becuase I needed a small, fast and intuitive GUI libary for games and graphic applications
+' This was born because I needed a small, fast and intuitive GUI libary for games and graphic applications
 ' This is a work in progress
 '
 ' Copyright (c) 2022 Samuel Gomes
@@ -17,105 +17,72 @@
 '$Include:'./IMGUI64.bi'
 '---------------------------------------------------------------------------------------------------------
 
-
-Dim mybutton%
-Dim x%, y%
-Dim helloworldinp%
-Dim helloworld$
-
-Screen _NewImage(800, 600, 32)
-_ScreenMove _Middle
-
-mybutton% = ButtonNew(Chr$(17), 24, 24)
-x% = (800 - ButtonWidth(mybutton%)) \ 2
-y% = (600 - ButtonHeight(mybutton%)) \ 2
-ButtonPut x%, y%, mybutton%
-ButtonShow mybutton%
-
-helloworldinp% = GLIInput(100, 100, 128, TEXT_BOX_ALPHA, "test me now")
-
-Do
-    Cls , NP_Blue
-
-    IMGUI64Update
-
-    GLIUpdate ' must be the second to last command in any loop
-
-    Locate 10, 1: Print "Real time: "; GLIOutput$(helloworldinp%); " ";
-
-    ButtonUpdate
-    Select Case ButtonEvent(mybutton%)
-        Case 0
-            Locate 11, 1
-            Print "NO INTERACTION";
-            ButtonOff mybutton%
-        Case 1
-            Locate 11, 1
-            Print " LEFT BUTTON  ";
-            ButtonOn mybutton%
-        Case 2
-            Locate 11, 1
-            Print " RIGHT BUTTON ";
-            ButtonOn mybutton%
-
-        Case 3
-            Locate 11, 1
-            Print "   HOVERING   ";
-            ButtonOff mybutton%
-    End Select
-
-    _Display
-
-    _Limit 60
-Loop Until IMGUI64GetKey = 27 Or GLIEntered(helloworldinp%)
-
-helloworld$ = GLIOutput$(helloworldinp%)
-
-GLIClose helloworldinp%
-ButtonFree mybutton%
-
-_AutoDisplay
-
-Locate 7, 1: Print "Final    : "; helloworld$
-
-End
+' TODO:
+'   Handle visible flag correctly for all routines
+'   Handle disabled flag correctly for all routines
 
 
-' Draws a filled circle
-Sub CircleFill (cx As Long, cy As Long, r As Long, c As Unsigned Long)
-    Dim As Long Radius, RadiusError, X, Y
+'Dim mybutton%
+'Dim x%, y%
+'Dim helloworldinp%
+'Dim helloworld$
 
-    Radius = Abs(r)
-    RadiusError = -Radius
-    X = Radius
-    Y = 0
+'Screen _NewImage(800, 600, 32)
+'_ScreenMove _Middle
 
-    If Radius = 0 Then
-        PSet (cx, cy), c
-        Exit Sub
-    End If
+'mybutton% = ButtonNew(Chr$(17), 24, 24)
+'x% = (800 - ButtonWidth(mybutton%)) \ 2
+'y% = (600 - ButtonHeight(mybutton%)) \ 2
+'ButtonPut x%, y%, mybutton%
+'ButtonShow mybutton%
 
-    Line (cx - X, cy)-(cx + X, cy), c, BF
+'helloworldinp% = GLIInput(100, 100, 128, TEXT_BOX_ALPHA, "test me now")
 
-    While X > Y
-        RadiusError = RadiusError + Y * 2 + 1
+'Do
+'    Cls , NP_Blue
 
-        If RadiusError >= 0 Then
-            If X <> Y + 1 Then
-                Line (cx - Y, cy - X)-(cx + Y, cy - X), c, BF
-                Line (cx - Y, cy + X)-(cx + Y, cy + X), c, BF
-            End If
-            X = X - 1
-            RadiusError = RadiusError - X * 2
-        End If
+'    WidgetUpdate
 
-        Y = Y + 1
+'    GLIUpdate
 
-        Line (cx - X, cy - Y)-(cx + X, cy - Y), c, BF
-        Line (cx - X, cy + Y)-(cx + X, cy + Y), c, BF
-    Wend
-End Sub
+'    Locate 10, 1: Print "Real time: "; GLIOutput$(helloworldinp%); " ";
 
+'    ButtonUpdate
+'    Select Case ButtonEvent(mybutton%)
+'        Case 0
+'            Locate 11, 1
+'            Print "NO INTERACTION";
+'            ButtonOff mybutton%
+'        Case 1
+'            Locate 11, 1
+'            Print " LEFT BUTTON  ";
+'            ButtonOn mybutton%
+'        Case 2
+'            Locate 11, 1
+'            Print " RIGHT BUTTON ";
+'            ButtonOn mybutton%
+
+'        Case 3
+'            Locate 11, 1
+'            Print "   HOVERING   ";
+'            ButtonOff mybutton%
+'    End Select
+
+'    _Display
+
+'    _Limit 60
+'Loop Until InputManagerGetKey& = 27 Or GLIEntered(helloworldinp%)
+
+'helloworld$ = GLIOutput$(helloworldinp%)
+
+'GLIClose helloworldinp%
+'ButtonFree mybutton%
+
+'_AutoDisplay
+
+'Locate 7, 1: Print "Final    : "; helloworld$
+
+'End
 
 
 $If IMGUI64_BAS = UNDEFINED Then
@@ -125,74 +92,31 @@ $If IMGUI64_BAS = UNDEFINED Then
     ' FUNCTIONS & SUBROUTINES
     '-----------------------------------------------------------------------------------------------------
 
-    ' This routine ties the whole update system and makes everything go
-    Sub IMGUI64Update
-        IMGUI64UpdateInputSystem
+    ' Calculates the bounding rectangle for a object given its position & size
+    Sub MakeRectangle (p As Vector2DType, s As Vector2DType, r As RectangleType)
+        r.a.x = p.x
+        r.a.y = p.y
+        r.b.x = p.x + s.x - 1
+        r.b.y = p.y + s.y - 1
     End Sub
 
 
-    Sub IMGUI64UpdateInputSystem
-        Shared InputManager As InputManagerType
-
-        ' Collect mouse input
-        Do While MouseInput
-            InputManager.mouseX = MouseX
-            InputManager.mouseY = MouseY
-
-            InputManager.leftMouseButton = MouseButton(1)
-            InputManager.rightMouseButton = MouseButton(2)
-
-            ' Exit the loop if either buttons were pressed
-            ' This will allow the library to process the click and ensure no clicks are missed
-            If InputManager.leftMouseButton Or InputManager.rightMouseButton Then Exit Do
-        Loop
-
-        ' Check if the lasd keyboard input was consumed and if so get the next one
-        InputManager.keyCode = _KeyHit
-    End Sub
-
-
-    ' This gets the current keyboard input
-    Function IMGUI64GetKey&
-        Shared InputManager As InputManagerType
-
-        IMGUI64GetKey = InputManager.keyCode
+    ' Does big contain small?
+    Function RectangleContainsRectangle%% (big As RectangleType, small As RectangleType)
+        RectangleContainsRectangle = PointCollidesWithRectangle(small.a, big) And PointCollidesWithRectangle(small.b, big)
     End Function
 
 
-    ' Get the mouse X position
-    Function IMGUI64GetMouseX&
-        Shared InputManager As InputManagerType
-
-        IMGUI64GetMouseX = InputManager.mouseX
+    ' Point & box collision test
+    Function PointCollidesWithRectangle%% (p As Vector2DType, r As RectangleType)
+        PointCollidesWithRectangle = Not (p.x < r.a.x Or p.x > r.b.x Or p.y < r.a.y Or p.y > r.b.y)
     End Function
 
 
-    ' Get the mouse Y position
-    Function IMGUI64GetMouseY&
-        Shared InputManager As InputManagerType
-
-        IMGUI64GetMouseY = InputManager.mouseY
-    End Function
-
-
-    ' Is the left mouse button down?
-    Function IMGUI64IsLeftMouseDown&
-        Shared InputManager As InputManagerType
-
-        IMGUI64IsLeftMouseDown = InputManager.leftMouseButton
-    End Function
-
-
-    ' Is the right mouse button down?
-    Function IMGUI64IsRightMouseDown&
-        Shared InputManager As InputManagerType
-
-        IMGUI64IsRightMouseDown = InputManager.rightMouseButton
-    End Function
-
-
-    Sub DrawBox3D (x1 As Long, y1 As Long, x2 As Long, y2 As Long, isRaised As Byte)
+    ' Draws a basic 3D box
+    ' This can be improved ... a lot XD
+    ' Also all colors are hardcoded
+    Sub WidgetDrawBox3D (x1 As Long, y1 As Long, x2 As Long, y2 As Long, isRaised As Byte)
         If isRaised Then
             Line (x1, y1)-(x2 - 1, y1), LightGray
             Line (x1, y1)-(x1, y2 - 1), LightGray
@@ -208,181 +132,841 @@ $If IMGUI64_BAS = UNDEFINED Then
         Line (x1 + 1, y1 + 1)-(x2 - 1, y2 - 1), Gray, BF
     End Sub
 
-    '******************************************************************************
-    '*                                                                            *
-    '* Returns the handle number of the current active input field. The function  *
-    '* will return 0 if there are no active input fields.                         *
-    '*                                                                            *
-    '******************************************************************************
-    Function GLICurrent&
-        Shared TextBox() As TextBoxType
-        Shared TextBoxSettings As TextBoxSettingsType
 
-        GLICurrent = 0 '                                                               assume no active input fields
-        If UBound(TextBox) = 0 Then Exit Function '                                        leave if no active input fields
-        GLICurrent = TextBoxSettings.current '                                                         return handle of current active input field
-    End Function
+    ' This routine ties the whole update system and makes everything go
+    Sub WidgetUpdate
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+        Shared InputManager As InputManagerType
+        Dim h As Long, r As RectangleType
 
+        InputManagerUpdate
 
-    '******************************************************************************
-    '*                                                                            *
-    '* Forces cursor to move to a specific input field, the next input field or   *
-    '* forces the input array to reset.                                           *
-    '*                                                                            *
-    '* handle% values available to programmer:                                    *
-    '*                                                                            *
-    '* -1 = force to next input field                                             *
-    '* >0 = force to a specific input field                                       *
-    '*                                                                            *
-    '******************************************************************************
-    Sub GLIForce (handle As Long)
-        Shared TextBox() As TextBoxType
-        Shared TextBoxSettings As TextBoxSettingsType
+        If UBound(Widget) = 0 Then Exit Sub ' Exit if there is nothing to do
 
-        If UBound(TextBox) = 0 Then Exit Sub '                                             leave if nothing is active
-        If (handle < -1) Or (handle = 0) Or (handle > UBound(TextBox)) Then '           is handle% valid?
-            Error 258
-        End If
-        TextBoxSettings.forced = handle '                                                         inform GLIUPDATE of force behavior
-    End Sub
+        ' Manage widget focus stuff
+        If WidgetManager.current = 0 Then WidgetManager.current = 1 ' if this is first time set current widget to 1
 
-
-    '******************************************************************************
-    '*                                                                            *
-    '* Closes all or a specific input field.                                      *
-    '*                                                                            *
-    '* handle% values available to programmer:                                    *
-    '*                                                                            *
-    '*  0 = close all input fields (forces a reset of input field array)          *
-    '* >0 = close a specific input field                                          *
-    '*                                                                            *
-    '******************************************************************************
-    Sub GLIClose (handle As Long)
-        Shared TextBox() As TextBoxType
-        Shared TextBoxSettings As TextBoxSettingsType
-
-        Dim Scan As Long ' used to scan through input array
-
-        If UBound(TextBox) = 0 Then Exit Sub ' leave if nothing is active
-
-        If handle <> 0 Then ' closing all input fields?
-            If (handle < 0) Or (handle > UBound(TextBox)) Or Not TextBox(handle).inUse Then ' no, is handle% valid?
-                Error 258
+        ' Shift focus if it was requested
+        If WidgetManager.forced <> 0 Then ' being forced to a widget
+            If WidgetManager.forced = -1 Then ' yes, to the next one?
+                h = WidgetManager.current ' set scanner to current widget
+                Do ' start scanning
+                    h = h + 1 ' move scanner to next handle number
+                    If h > UBound(Widget) Then h = 1 ' return to start of widget array if limit reached
+                    If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled Then WidgetManager.current = h ' set current widget if in use
+                Loop Until WidgetManager.current = h ' leave scanner when a widget in use is found
+                WidgetManager.forced = 0 ' reset force indicator
+            Else ' yes, to a specific input field
+                If Widget(WidgetManager.forced).inUse And Widget(WidgetManager.forced).visible And Not Widget(WidgetManager.forced).disabled Then
+                    WidgetManager.current = WidgetManager.forced ' set the current widget
+                End If
+                WidgetManager.forced = 0 ' reset force indicator
             End If
         End If
 
-        If handle > 0 Then ' closing a specific input field?
-            _FreeImage TextBox(handle).renderImage ' remove the text image from memory
-            TextBox(handle).renderImage = 0
-            TextBox(handle).inUse = FALSE ' yes, this input field no longer used (FALSE)
-            For Scan = 1 To UBound(TextBox) ' cycle through the input array
-                If TextBox(Scan).inUse Then ' is this input field in use?
-                    GLIForce -1 ' yes, force input to next field
-
-                    Exit Sub ' no need to scan any further
-                End If
-            Next
+        ' Check for user input requesting focus change
+        If InputManager.keyCode = KEY_TAB Then
+            WidgetManager.forced = -1 ' Move to the next widget
+            InputManager.keyCode = NULL ' consume the key
         End If
 
-        For Scan = 1 To UBound(TextBox) ' cycle through all input fields
-            If TextBox(Scan).inUse Then _FreeImage TextBox(Scan).renderImage ' remove the text image from memory
+        ' Check if the user to trying to click on something to change focus
+        For h = 1 To UBound(Widget)
+            If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled And h <> WidgetManager.current Then
+
+                ' Find the bounding box
+                MakeRectangle Widget(WidgetManager.current).position, Widget(WidgetManager.current).size, r
+
+                If InputManager.mouseLeftClicked Then
+                    If RectangleContainsRectangle(r, InputManager.mouseLeftButtonClickedRectangle) Then
+                        WidgetManager.forced = h ' Move to the specific widget
+                        InputManager.mouseLeftClicked = FALSE ' consume mouse click
+                    End If
+                End If
+
+                If InputManager.mouseRightClicked Then
+                    If RectangleContainsRectangle(r, InputManager.mouseRightButtonClickedRectangle) Then
+                        WidgetManager.forced = h ' Move to the specific widget
+                        InputManager.mouseRightClicked = FALSE ' consume mouse click
+                    End If
+                End If
+            End If
         Next
 
-        ReDim TextBox(0 To 0) As TextBoxType ' reset the input array
-        TextBoxSettings.current = 0 ' reset the current input field
+        ' Update individual widgets
+        PushButtonUpdate
+        TextBoxUpdate
+
+        ' Draw the widget
+        For h = 1 To UBound(Widget)
+            If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled Then
+                ' Draw
+            End If
+        Next
     End Sub
 
 
-    '******************************************************************************
-    '*                                                                            *
-    '* Retrieves the input text from a specific input field.                      *
-    '*                                                                            *
-    '* handle% values available to programmer:                                    *
-    '*                                                                            *
-    '* >0 = get the input text from the specific input field                      *
-    '*                                                                            *
-    '******************************************************************************
-    Function GLIOutput$ (handle%)
-        Shared TextBox() As TextBoxType
+    Sub InputManagerUpdate
+        Shared InputManager As InputManagerType
+        Static As Byte mouseLeftButtonDown, mouseRightButtonDown ' keeps track if the mouse buttons were held down
 
-        If UBound(TextBox) = 0 Then Exit Function '                                        leave if nothing is active
-        If (handle% < 1) Or (handle% > UBound(TextBox)) Or Not TextBox(handle%).inUse Then '                             is handle% valid?
-            Error 258
-        End If
+        ' Collect mouse input
+        Do While MouseInput
+            InputManager.mousePosition.x = MouseX
+            InputManager.mousePosition.y = MouseY
 
-        GLIOutput = TextBox(handle%).text
+            InputManager.mouseLeftButton = MouseButton(1)
+            InputManager.mouseRightButton = MouseButton(2)
+
+            ' Check if the left button were previously held down and update the up position if released
+            If Not InputManager.mouseLeftButton And mouseLeftButtonDown Then
+                mouseLeftButtonDown = FALSE
+                InputManager.mouseLeftButtonClickedRectangle.b = InputManager.mousePosition
+                InputManager.mouseLeftClicked = TRUE
+            End If
+
+            ' Check if the button were previously held down and update the up position if released
+            If Not InputManager.mouseRightButton And mouseRightButtonDown Then
+                mouseRightButtonDown = FALSE
+                InputManager.mouseRightButtonClickedRectangle.b = InputManager.mousePosition
+                InputManager.mouseRightClicked = TRUE
+            End If
+
+            ' Check if the mouse button was pressed and update the down position
+            If InputManager.mouseLeftButton And Not mouseLeftButtonDown Then
+                mouseLeftButtonDown = TRUE
+                InputManager.mouseLeftButtonClickedRectangle.a = InputManager.mousePosition
+                InputManager.mouseLeftClicked = FALSE
+            End If
+
+            ' Check if the mouse button was pressed and update the down position
+            If InputManager.mouseRightButton And Not mouseRightButtonDown Then
+                mouseRightButtonDown = TRUE
+                InputManager.mouseRightButtonClickedRectangle.a = InputManager.mousePosition
+                InputManager.mouseRightClicked = FALSE
+            End If
+        Loop
+
+        ' Get keyboard input from the keyboard buffer
+        InputManager.keyCode = KeyHit
+    End Sub
+
+
+    ' This gets the current keyboard input
+    Function InputManagerKey&
+        Shared InputManager As InputManagerType
+
+        InputManagerKey = InputManager.keyCode
     End Function
 
 
-    '******************************************************************************
-    '*                                                                            *
-    '* Reports back if the ENTER key has been pressed on one or all input fileds. *
-    '*                                                                            *
-    '* handle% values available to programmer:                                    *
-    '*                                                                            *
-    '*  0 = get the ENTER key status of all input fields in use (TRUE/FALSE)      *
-    '* >0 = get the ENTER key status on a certain input field (TRUE/FALSE)        *
-    '*                                                                            *
-    '******************************************************************************
-    Function GLIEntered%% (handle%)
-        Shared TextBox() As TextBoxType
+    ' Get the mouse X position
+    Function InputManagerMouseX&
+        Shared InputManager As InputManagerType
 
-        Dim Scan% '                                                                    used to scan through input array
+        InputManagerMouseX = InputManager.mousePosition.x
+    End Function
 
-        If UBound(TextBox) = 0 Then Exit Function '                                        leave if nothing is active
-        If (handle% < 0) Or (handle% > UBound(TextBox)) Then '                             is handle% valid?
-            Error 258
+
+    ' Get the mouse Y position
+    Function InputManagerMouseY&
+        Shared InputManager As InputManagerType
+
+        InputManagerMouseY = InputManager.mousePosition.y
+    End Function
+
+
+    ' Is the left mouse button down?
+    Function InputManagerMouseLeftButton%%
+        Shared InputManager As InputManagerType
+
+        InputManagerMouseLeftButton = InputManager.mouseLeftButton
+    End Function
+
+
+    ' Is the right mouse button down?
+    Function InputManagerMouseRightButton%%
+        Shared InputManager As InputManagerType
+
+        InputManagerMouseRightButton = InputManager.mouseRightButton
+    End Function
+
+
+    ' Returns the handle number of the widget that has focus
+    ' The function will return 0 if there are no active widgets
+    Function CurrentWidget&
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        CurrentWidget = WidgetManager.current
+    End Function
+
+
+    ' This set the focus on the widget handle that is passed
+    ' The focus changes on the next update
+    ' -1 = move to next widget
+    ' >0 = move to a specific widget
+    Sub CurrentWidget (handle As Long)
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+
+        If UBound(Widget) = 0 Then Exit Sub ' Leave if nothing is active
+
+        If handle < -1 Or handle = 0 Or handle > UBound(Widget) Then ' is handle valid?
+            Error ERROR_INVALID_HANDLE
         End If
-        If handle% > 0 Then '                                                          looking for a certain input field?
-            GLIEntered = TextBox(handle%).entered '                                        yes, report back the ENTER key status
-        Else '                                                                         no, looking for all input fields
-            GLIEntered = TRUE '                                                          assume all have had ENTER key pressed (TRUE)
-            For Scan% = 1 To UBound(TextBox) '                                             scan the entire input array
-                If TextBox(Scan%).inUse And (Not TextBox(Scan%).entered) Then '                is field in use and no ENTER key pressed?
-                    GLIEntered = FALSE '                                                   yes, report back not all fields been ENTERed (FALSE)
-                    Exit Function '                                                    no need to check any further
+
+        WidgetManager.forced = handle ' inform WidgetUpdate to change the focus
+    End Sub
+
+
+    ' Closes a specific widget
+    Sub FreeWidget (handle As Long)
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+
+        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then ' is handle valid?
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        ' We will not bother resizing the widget array so that subsequent allocations will be faster
+        ' So just set the 'inUse' member to false
+        Widget(handle).inUse = FALSE
+        ' Set focus on the next widget
+        CurrentWidget -1
+    End Sub
+
+
+    ' Closes all widgets
+    Sub FreeAllWidgets
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+
+        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+
+        ReDim Widget(0 To 0) As WidgetType ' reset the widget array
+        WidgetManager.current = 0
+        WidgetManager.forced = 0
+    End Sub
+
+
+    ' Retrieves the text from a specific widget
+    Function WidgetText$ (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetText = Widget(handle).text
+    End Function
+
+
+    ' Sets the text of a specific widget
+    Sub WidgetText (handle As Long, text As String)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).text = text
+    End Sub
+
+
+    ' Reports back if the ENTER key has been pressed on one or all input fileds
+    ' handle values available to programmer:
+    '  0 = get the ENTER key status of all input fields in use (TRUE/FALSE)      *
+    ' >0 = get the ENTER key status on a certain input field (TRUE/FALSE)        *
+    Function TextBoxEntered%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function ' leave if nothing is active
+
+        If handle < 1 Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        If handle > 0 Then
+            TextBoxEntered = Widget(handle).txt.entered
+        Else
+            Dim h As Long
+
+            TextBoxEntered = TRUE '  assume all have had ENTER key pressed (TRUE)
+
+            For h = 1 To UBound(Widget)
+                If Widget(h).inUse And Not Widget(h).txt.entered Then
+                    TextBoxEntered = FALSE
+
+                    Exit Function
                 End If
-            Next Scan%
+            Next
         End If
     End Function
 
 
-    ' Sets up a text input box. Returns a handle value that points to the input text field.
-    ' x - x location of input text field
-    ' y - y location of input text field
-    ' w - width of the box in pixels
-    ' allow - type of text allowed
-    ' defaultInputText - default string in the input field
-    Function GLIInput& (x As Long, y As Long, w As Unsigned Long, allow As Unsigned Integer, defaultInputText As String)
-        Shared TextBox() As TextBoxType
-        Shared TextBoxSettings As TextBoxSettingsType
+    ' Sets up a widget and returns a handle value that points to that widget
+    Function NewWidget& (class As Long)
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
 
-        Dim c As Long ' the new handle number
+        If class < 0 Or class >= WIDGET_CLASS_COUNT Then
+            Error ERROR_FEATURE_UNAVAILABLE
+        End If
 
-        If TextBoxSettings.current = 0 Then TextBoxSettings.current = 1 ' first time called set to 1
-        ReDim _Preserve TextBox(1 To UBound(TextBox) + 1) As TextBoxType ' create a new input array entry
+        Dim h As Long ' the new handle number
 
-        c = UBound(TextBox) ' get the new handle number
+        Do ' find available handle
+            h = h + 1
+        Loop Until Not Widget(h).inUse Or h = UBound(Widget)
 
-        TextBox(c).x = x ' save the x location of text
-        TextBox(c).y = y ' save the y location of text
-        TextBox(c).w = w - 4 ' save width - 4 pixels for the border
-        TextBox(c).h = FontHeight + 4 ' save height + 4 pixels for the border
-        TextBox(c).text = defaultInputText ' set default input text
-        TextBox(c).allow = allow ' save the type of input allowed
-        TextBox(c).cursorPosition = 1 ' set the cursor at the beginning of the input line
-        TextBox(c).cursorPosBox = 1
-        TextBox(c).visibleTextLen = (w - PrintWidth("W") * 2) \ PrintWidth("W")
-        TextBox(c).startVisibleChar = 1
-        TextBox(c).cursorWidth = PrintWidth("X")
-        TextBox(c).insertMode = TRUE ' initial insert mode to insert
-        TextBox(c).entered = FALSE ' ENTER has not been pressed yet (FALSE)
-        TextBox(c).renderImage = NewImage(w, FontHeight, 32) ' Create a bitmap to just hold the text image
-        TextBox(c).visible = TRUE ' initially visible on screen (TRUE)
-        TextBox(c).inUse = TRUE ' this input field is now in use (TRUE)
+        If Widget(h).inUse Then ' last one in use?
+            h = h + 1 ' use next handle
+            ReDim Preserve Widget(1 To h) As WidgetType ' increase array size
+        End If
 
-        GLIInput = c ' return with the new handle number
+        If WidgetManager.current = 0 Then WidgetManager.current = 1 ' first time called set to 1
+
+        Dim temp As WidgetType
+        Widget(h) = temp ' ensure everything is wiped
+
+        Widget(h).inUse = TRUE
+        Widget(h).class = class ' set the class
+
+        NewWidget = h ' return the handle
     End Function
+
+
+    ' Duplicates a widget from a designated handle
+    ' Returns handle value greater than 0 indicating the new widgets handle
+    Function CopyWidget& (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Dim nh As Long
+        nh = NewWidget(0) ' creat a new widget of class 0. Whatever that is, is not important
+        Widget(nh) = Widget(handle) ' copy all properties
+
+        CopyWidget = nh ' return new handle
+    End Function
+
+
+    ' Creates a new button
+    Function NewPushButton& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long)
+        Shared Widget() As WidgetType
+        Dim b As Long
+
+        b = NewWidget(WIDGET_PUSH_BUTTON)
+
+        Widget(b).text = text
+        Widget(b).position.x = x
+        Widget(b).position.y = y
+        Widget(b).size.x = w
+        Widget(b).size.y = h
+        Widget(b).visible = TRUE
+
+        ' Class specific stuff are all 0 thanks to NewWidget()
+        ' So, we will not bother changing anything
+
+        NewPushButton = b
+    End Function
+
+
+    ' Create a new input box
+    Function NewInputBox& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long, flags As Unsigned Long)
+        Shared Widget() As WidgetType
+
+        Dim t As Long ' the new handle number
+
+        t = NewWidget(WIDGET_TEXT_BOX)
+
+        Widget(t).text = text
+        Widget(t).position.x = x
+        Widget(t).position.y = y
+        Widget(t).size.x = w
+        Widget(t).size.y = h
+        Widget(t).visible = TRUE
+
+        ' Set class specific stuff
+        Widget(t).txt.flags = flags ' store the flags
+        Widget(t).txt.textPosition = 1 ' set the cursor at the beginning of the input line
+        Widget(t).txt.boxPosition = 1
+        Widget(t).txt.boxTextLength = (w - PrintWidth("W") * 2) \ PrintWidth("W") ' calculate the number of character we can show at a time
+        Widget(t).txt.boxStartCharacter = 1
+        Widget(t).txt.insertMode = TRUE ' initial insert mode to insert
+
+        NewInputBox = t
+    End Function
+
+
+    ' Hides / shows a widget on screen
+    Sub WidgetVisible (handle As Long, visible As Byte)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).visible = visible
+    End Sub
+
+
+    ' Returns if a widget is hidden or shown
+    Function WidgetVisible%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetVisible = Widget(handle).visible
+    End Function
+
+
+    ' Hides / shows a widget on screen
+    Sub WidgetDisabled (handle As Long, disabled As Byte)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).disabled = disabled
+    End Sub
+
+
+    ' Returns if a widget is hidden or shown
+    Function WidgetDisabled%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetDisabled = Widget(handle).disabled
+    End Function
+
+
+    Sub WidgetPositionX (handle As Long, x As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).position.x = x
+    End Sub
+
+
+    Function WidgetPositionX& (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetPositionX = Widget(handle).position.x
+    End Function
+
+
+    Sub WidgetPositionY (handle As Long, y As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).position.y = y
+    End Sub
+
+
+    Function WidgetPositionY& (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetPositionY = Widget(handle).position.y
+    End Function
+
+
+    Sub WidgetSizeX (handle As Long, x As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).size.x = x
+    End Sub
+
+
+    Function WidgetSizeX& (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetSizeX = Widget(handle).size.x
+    End Function
+
+
+    Sub WidgetSizeY (handle As Long, y As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).size.y = y
+    End Sub
+
+
+    Function WidgetSizeY& (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetSizeY = Widget(handle).size.y
+    End Function
+
+
+    Function WidgetClicked%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        WidgetClicked = Widget(handle).clicked
+    End Function
+
+
+    Sub PushButtonState (handle As Long, state As Byte)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).cmd.state = state
+    End Sub
+
+
+    Function PushButtonState%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Function
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        PushButtonState = Widget(handle).cmd.state
+    End Function
+
+
+    ' Toggles the button specified between pressed/depressed
+    Sub PushButtonToggleState (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = 0 Then Exit Sub
+
+        If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        Widget(handle).cmd.state = Not Widget(handle).cmd.state
+    End Sub
+
+
+    ' This will update the status of a button (state & clicked etc.) based on user input
+    ' This always works on the button that has focus
+    Sub PushButtonUpdate
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+        Shared InputManager As InputManagerType
+        Dim r As RectangleType, clicked As Byte
+
+        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+
+        If Widget(WidgetManager.current).class <> WIDGET_PUSH_BUTTON Then Exit Sub ' leave if the currently focused widget is not a button
+
+        ' Find the bounding box
+        MakeRectangle Widget(WidgetManager.current).position, Widget(WidgetManager.current).size, r
+
+        If InputManager.mouseLeftClicked Then
+            If RectangleContainsRectangle(r, InputManager.mouseLeftButtonClickedRectangle) Then
+                clicked = TRUE
+                InputManager.mouseLeftClicked = FALSE ' consume mouse click
+            End If
+        End If
+
+        If InputManager.mouseRightClicked Then
+            If RectangleContainsRectangle(r, InputManager.mouseRightButtonClickedRectangle) Then
+                clicked = TRUE
+                InputManager.mouseRightClicked = FALSE ' consume mouse click
+            End If
+        End If
+
+        If InputManager.keyCode = KEY_ENTER Or InputManager.keyCode = KEY_SPACE_BAR Then
+            clicked = TRUE
+            InputManager.keyCode = NULL ' consume keystroke
+        End If
+
+        If clicked Then
+            Widget(WidgetManager.current).clicked = TRUE
+
+            ' Toggle if this is a toggle button
+            If Widget(WidgetManager.current).cmd.toggle Then
+                Widget(WidgetManager.current).cmd.state = Not Widget(WidgetManager.current).cmd.state
+            End If
+        End If
+    End Sub
+
+
+    ' This will update the state of text box based on user input
+    ' This always works on the text box that has focus
+    Sub TextBoxUpdate
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+        Shared InputManager As InputManagerType
+
+        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+
+        If Widget(WidgetManager.current).class <> WIDGET_TEXT_BOX Then Exit Sub ' leave if the currently focused widget is not a text box
+
+
+        ' First process any pressed keys
+        Select Case InputManager.keyCode ' which key was hit?
+            Case 20992 ' INSERT key was pressed
+                TextBox(TextBoxSettings.current).insertMode = Not TextBox(TextBoxSettings.current).insertMode
+
+            Case 19712 ' RIGHT ARROW key was pressed
+                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                If TextBox(TextBoxSettings.current).cursorPosition > Len(TextBox(TextBoxSettings.current).text) + 1 Then ' will this take the cursor too far?
+                    TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' yes, keep the cursor at the end of the line
+                End If
+
+                ' Box cursor movement
+                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
+                If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
+                    TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
+                    TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+                End If
+
+            Case 19200 ' LEFT ARROW key was pressed
+                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
+                If TextBox(TextBoxSettings.current).cursorPosition < 1 Then ' did cursor go beyone beginning of line?
+                    TextBox(TextBoxSettings.current).cursorPosition = 1 ' yes, keep the cursor at the beginning of the line
+                End If
+
+                ' Box cursor movement
+                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
+                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
+                    TextBox(TextBoxSettings.current).cursorPosBox = 1
+                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
+                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
+                    End If
+                End If
+
+
+            Case 8 ' BACKSPACE key pressed
+                If TextBox(TextBoxSettings.current).cursorPosition > 1 Then ' is the cursor at the beginning of the line?
+                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 2) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' no, delete character
+                    TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
+                End If
+
+                ' Box cursor movement
+                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
+                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
+                    TextBox(TextBoxSettings.current).cursorPosBox = 1
+
+                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
+                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
+                    End If
+                End If
+
+            Case 18176 ' HOME key was pressed
+                TextBox(TextBoxSettings.current).cursorPosition = 1 ' move the cursor to the beginning of the line
+                TextBox(TextBoxSettings.current).cursorPosBox = 1
+                TextBox(TextBoxSettings.current).startVisibleChar = 1
+
+            Case 20224 ' END key was pressed
+                TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' move the cursor to the end of the line
+                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
+                TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+
+            Case 21248 ' DELETE key was pressed
+                If TextBox(TextBoxSettings.current).cursorPosition < Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
+                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' no, delete character
+                End If
+
+            Case 9, 13, 20480 ' TAB, ENTER or DOWN ARROW key pressed
+                If InputManager.keyCode = 13 Then TextBox(TextBoxSettings.current).entered = TRUE ' if enter key was pressed remember it (TRUE)
+                Scan = TextBoxSettings.current ' set initital point of input array scan
+                Do ' begin scanning input array
+                    Scan = Scan + 1 ' increment the scanner
+                    If Scan > UBound(TextBox) Then Scan = 1 ' go to beginning of array if the end was reached
+                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
+                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
+
+            Case 18432 ' UP ARROW key was pressed
+                Scan = TextBoxSettings.current ' set initial point of input array scan
+                Do ' begin scanning input array
+                    Scan = Scan - 1 ' decrement the scanner
+                    If Scan = 0 Then Scan = UBound(TextBox) ' go the end of the array if the beginning was reached
+                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
+                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
+
+            Case Else ' a character key was pressed
+                If InputManager.keyCode > 31 And InputManager.keyCode < 256 Then ' is it a valid ASCII displayable character?
+                    Dim K As String ' yes, initialize key holder variable
+                    Select Case InputManager.keyCode ' which alphanumeric key was pressed?
+                        Case 32 ' SPACE key was pressed
+                            K = Chr$(InputManager.keyCode) ' save the keystroke
+
+                        Case 40 To 41 ' PARENTHESIS key was pressed
+                            If (TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS) Or (TextBox(TextBoxSettings.current).allow And TEXT_BOX_PAREN) Then
+                                K = Chr$(InputManager.keyCode) ' if it's allowed then save the keystroke
+                            End If
+
+                        Case 45 ' DASH (minus -) key was pressed
+                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_DASH Then ' are dashes allowed?
+                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
+                            End If
+
+                        Case 48 To 57 ' NUMBER key was pressed
+                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_NUMERIC Then ' are numbers allowed?
+                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
+                            End If
+
+                        Case 33 To 47, 58 To 64, 91 To 96, 123 To 255 ' SYMBOL key was pressed
+                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS Then ' are symbols allowed?
+                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
+                            End If
+
+                        Case 65 To 90, 97 To 122 ' ALPHABETIC key was pressed
+                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_ALPHA Then ' are alpha keys allowed?
+                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
+                            End If
+                    End Select
+
+                    If K <> NULLSTRING Then ' was an allowed keystroke saved?
+                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_LOWER Then ' should it be forced to lower case?
+                            K = LCase$(K) ' yes, force the keystroke to lower case
+                        End If
+
+                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_UPPER Then ' should it be forced to upper case?
+                            K = UCase$(K) ' yes, force the keystroke to upper case
+                        End If
+
+                        If TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
+                            TextBox(TextBoxSettings.current).text = TextBox(TextBoxSettings.current).text + K ' yes, simply add the keystroke to input text
+                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                        ElseIf TextBox(TextBoxSettings.current).insertMode Then ' no, are we in INSERT mode?
+                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' yes, insert the character
+                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                        Else ' no, we are in OVERWRITE mode
+                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' overwrite with new character
+                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                        End If
+
+                        ' Box cursor movement
+                        TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
+                        If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
+                            TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
+                            TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+                        End If
+                    End If
+                End If
+        End Select
+end sub
+
+    '******************************************************************************
+    '* Places, moves or refreshes a button on the screen.                         *
+    '*                                                                            *
+    '* x%  - x location of button.                                                *
+    '* y%  - y location of button.                                                *
+    '* bh% - Handle number of button to place.                                    *
+    '*                                                                            *
+    '* Note: The first time a handle is called the button will be placed on the   *
+    '*       screen. Subsequent calls to the same handle will move the button to  *
+    '*       a new location, restoring the background at the old position. If a   *
+    '*       handle is called at the same coordinates as a previous call, the     *
+    '*       button is simply refreshed on the screen.                            *
+    '******************************************************************************
+    Sub ButtonPut (x%, y%, bh As Long) '                                    Error Checking
+        Shared CommandButton() As CommandButtonType '                                       button defining array
+
+        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        If Not ((CommandButton(bh).x = x%) And (CommandButton(bh).y = y%)) Then '     button x,y change?
+            CommandButton(bh).x = x% '                                      save new x location
+            CommandButton(bh).y = y% '                                      save new y location
+        End If
+        If CommandButton(bh).visible Then '                                    is button on screen?
+            If CommandButton(bh).state Then '                               is button pressed?
+                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, FALSE ' draw button pressed
+                Color Black, Gray
+                PrintString (1 + x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, 1 + y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
+
+            Else '                                                button is not pressed
+                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, TRUE ' draw button depressed
+                Color Black, Gray
+                PrintString (x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
+            End If
+        End If
+    End Sub
+
 
 
     '******************************************************************************
@@ -603,306 +1187,6 @@ $If IMGUI64_BAS = UNDEFINED Then
         Next
     End Sub
 
-
-    '******************************************************************************
-    '* Shows a button on screen that is currently hidden.                         *
-    '*                                                                            *
-    '* bh% - Handle number of button to show.                                     *
-    '******************************************************************************
-    Sub ButtonShow (bh As Long) '                                           Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        CommandButton(bh).visible = TRUE
-    End Sub
-
-
-    '******************************************************************************
-    '* Hides a button currently shown on screen.                                  *
-    '*                                                                            *
-    '* bh% - Handle number of button to hide.                                     *
-    '******************************************************************************
-    Sub ButtonHide (bh As Long) '                                           Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        CommandButton(bh).visible = FALSE
-    End Sub
-
-
-    '******************************************************************************
-    '* Toggles the button to a depressed state.                                   *
-    '*                                                                            *
-    '* bh% - Handle number of button to press.                                    *
-    '******************************************************************************
-    Sub ButtonOff (bh As Long) '                                            Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        CommandButton(bh).state = 0 '                                       depress button
-        ButtonPut CommandButton(bh).x, CommandButton(bh).y, bh '                     update button image
-    End Sub
-
-
-    '******************************************************************************
-    '* Toggles the button to a pressed state.                                     *
-    '*                                                                            *
-    '* bh% - Handle number of button to press.                                    *
-    '******************************************************************************
-    Sub ButtonOn (bh As Long) '                                             Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        CommandButton(bh).state = -1 '                                      press button
-        ButtonPut CommandButton(bh).x, CommandButton(bh).y, bh '                     update button image
-    End Sub
-
-
-    '******************************************************************************
-    '* Toggles the button specified between pressed/depressed.                    *
-    '*                                                                            *
-    '* bh% - Handle number of button to toggle.                                   *
-    '******************************************************************************
-    Sub ButtonToggle (bh As Long) '                                         Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        CommandButton(bh).state = Not CommandButton(bh).state '                       toggle button's state
-        ButtonPut CommandButton(bh).x, CommandButton(bh).y, bh '                     update button image
-    End Sub
-
-
-    '******************************************************************************
-    '* Returns the status of a button's mouse/button interaction.                 *
-    '*                                                                            *
-    '* bh% = The button handle number to retrieve the status from.                *
-    '******************************************************************************
-    Function ButtonEvent (bh As Long) '                                     Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        ButtonEvent = CommandButton(bh).mouse '                             return mouse status
-    End Function
-
-
-    '******************************************************************************
-    '* Checks the status of the buttons in relation to the mouse pointer.         *
-    '*                                                                            *
-    '* Sets each buttons .mouse element to the following conditions:              *
-    '*   0 - no mouse event.                                                      *
-    '*   1 - left mouse button clicked on button.                                 *
-    '*   2 - right mouse button clicked on button.                                *
-    '*   3 - mouse hovering over button.                                          *
-    '*                                                                            *
-    '* Note: This subroutine is called automatically if button checking is turned *
-    '*       on. If button checking is turned off the user can still call this    *
-    '*       subroutine manually to get updates on mouse/button interaction.      *
-    '******************************************************************************
-    Sub ButtonUpdate
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-        Shared InputManager As InputManagerType
-
-        Dim bh% '                                                 button handle counter
-        Dim ev% '                                                 current mouse event
-
-        ev% = 3 '                                                 assume hovering
-        If InputManager.leftMouseButton Then ev% = 1 '                         left button clicked
-        If InputManager.rightMouseButton Then ev% = 2 '                         right button cicked
-        For bh% = 1 To UBound(CommandButton) '                               test pointer boundary
-            If CommandButton(bh%).inUse And CommandButton(bh%).visible Then '              used and on screen?
-                If (InputManager.mouseX >= CommandButton(bh%).x) And (InputManager.mouseX <= CommandButton(bh%).x + CommandButton(bh%).w - 1) And (InputManager.mouseY >= CommandButton(bh%).y) And (InputManager.mouseY <= CommandButton(bh%).y + CommandButton(bh%).h - 1) Then
-                    CommandButton(bh%).mouse = ev% '                         is in boundary, set
-                Else '                                            not button boundary
-                    CommandButton(bh%).mouse = 0 '                           no event to set
-                End If
-            End If
-        Next bh%
-    End Sub
-
-
-    '******************************************************************************
-    '* Returns the height of a button handle.                                     *
-    '*                                                                            *
-    '* bh% - Handle number of button to get height from.                          *
-    '*                                                                            *
-    '* returns: Integer value indicating the height of the button.                *
-    '******************************************************************************
-    Function ButtonHeight (bh As Long) '                                    Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        ButtonHeight = CommandButton(bh).h '                               return button height
-    End Function
-
-
-    '******************************************************************************
-    '* Returns the width of a button handle.                                      *
-    '*                                                                            *
-    '* bh% - Handle number of button to get width from.                           *
-    '*                                                                            *
-    '* returns: Integer value indicating the width of the button.                 *
-    '******************************************************************************
-    Function ButtonWidth (bh As Long) '                                     Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        ButtonWidth = CommandButton(bh).w '                                return button width
-    End Function
-
-
-    '******************************************************************************
-    '* Duplicates a button handle from a designated handle.                       *
-    '*                                                                            *
-    '* bh% - Handle number of button to duplicate.                                *
-    '*                                                                            *
-    '* returns: Integer value greater than 0 indicating the new button's handle.  *
-    '******************************************************************************
-    Function ButtonCopy (bh As Long) '                                      Error Checking
-        Dim nh As Long '                                                 new button handle num
-
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        nh = ButtonNew(NULLSTRING, 0, 0) ' get new handle number
-        CommandButton(nh) = CommandButton(bh) ' new button properties
-        CommandButton(bh).visible = FALSE ' not showing on screen
-
-        ButtonCopy = nh ' return hew handle num
-    End Function
-
-
-    '******************************************************************************
-    '* Removes a button from the screen, restores the background image and frees  *
-    '* any resources the button was using.                                        *
-    '*                                                                            *
-    '* bh% - Handle number of button to free.                                     *
-    '******************************************************************************
-    Sub ButtonFree (bh As Long) '                                           Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        If bh = UBound(CommandButton) And bh <> 1 Then '                   button last element?
-            ReDim _Preserve CommandButton(1 To bh - 1) As CommandButtonType '                   decrease array size
-        Else '                                                    not last element
-            CommandButton(bh).inUse = 0 '                                   not in use any more
-            CommandButton(bh).visible = FALSE '                                    not showing on screen
-            CommandButton(bh).state = 0 '                                   reset button state
-            CommandButton(bh).text = NULLSTRING ' remove any text
-        End If
-    End Sub
-
-
-    '******************************************************************************
-    '* Places, moves or refreshes a button on the screen.                         *
-    '*                                                                            *
-    '* x%  - x location of button.                                                *
-    '* y%  - y location of button.                                                *
-    '* bh% - Handle number of button to place.                                    *
-    '*                                                                            *
-    '* Note: The first time a handle is called the button will be placed on the   *
-    '*       screen. Subsequent calls to the same handle will move the button to  *
-    '*       a new location, restoring the background at the old position. If a   *
-    '*       handle is called at the same coordinates as a previous call, the     *
-    '*       button is simply refreshed on the screen.                            *
-    '******************************************************************************
-    Sub ButtonPut (x%, y%, bh As Long) '                                    Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error 258
-        End If
-
-        If Not ((CommandButton(bh).x = x%) And (CommandButton(bh).y = y%)) Then '     button x,y change?
-            CommandButton(bh).x = x% '                                      save new x location
-            CommandButton(bh).y = y% '                                      save new y location
-        End If
-        If CommandButton(bh).visible Then '                                    is button on screen?
-            If CommandButton(bh).state Then '                               is button pressed?
-                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, FALSE ' draw button pressed
-                Color Black, Gray
-                PrintString (1 + x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, 1 + y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
-
-            Else '                                                button is not pressed
-                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, TRUE ' draw button depressed
-                Color Black, Gray
-                PrintString (x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
-            End If
-        End If
-    End Sub
-
-
-    '******************************************************************************
-    '* Creates a new button either internally or from a file set                  *
-    '*                                                                            *
-    '* xs%     - The width of the button. This value is ignored if a valid        *
-    '*           filename is provided through bname$.                             *
-    '* ys%     - The height of the button. This value is ignored if a valid       *
-    '*           filename is provided through bname$.                             *
-    '*                                                                            *
-    '* returns:  Integer value greater than 0 indicating the button's handle.     *
-    '*                                                                            *
-    '* Note:     If the button specified in bname$ does not exist then a generic  *
-    '*           button will be created from xsize%, ysize% and bcolor& to take   *
-    '*           the place of the missing button file. This can either be viewed  *
-    '*           as a failsafe feature or allow the coder to concentrate on the   *
-    '*           code and the button graphics later.                              *
-    '*                                                                            *
-    '* NEED TO FIX: Custom button creation routine is half baked. The buttons     *
-    '*              look "ok", but the routine could really use the touch of a    *
-    '*              good graphics programmer.                                     *
-    '******************************************************************************
-    Function ButtonNew& (text As String, xs%, ys%)
-        Dim bh As Long '                             handle number of button to be passed back
-
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        Do '                                                      find available handle
-            bh = bh + 1 '                                       inc handle number
-        Loop Until (Not CommandButton(bh).inUse) Or bh = UBound(CommandButton) '      test handle value
-        If CommandButton(bh).inUse Then '                                   last one in use?
-            bh = bh + 1 '                                       use next handle
-            ReDim _Preserve CommandButton(1 To bh) As CommandButtonType '                       increase array size
-        End If
-        CommandButton(bh).inUse = TRUE '                                      mark as in use
-        CommandButton(bh).text = text
-        CommandButton(bh).state = 0 '                                       mark as out
-        CommandButton(bh).x = -32767 '                                      set low for first use
-        CommandButton(bh).y = -32767 '                                      set low for first use
-        CommandButton(bh).w = xs% '                                width of button
-        CommandButton(bh).h = ys% '                                height of button
-
-        ButtonNew = bh '                                         return handle number
-    End Function
-    '-----------------------------------------------------------------------------------------------------
+'-----------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------

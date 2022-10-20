@@ -9,7 +9,7 @@ Const ATOMS_DEFAULT = 300 ' this is the default numbers of atoms we start in eac
 Const GROUPS_MAX = 7 ' maximum number of groups in the universe
 
 ' A typical 2D floating point vector
-Type VectorType
+Type Vector2DFType
     x As Single
     y As Single
 End Type
