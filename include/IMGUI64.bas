@@ -711,7 +711,7 @@ $If IMGUI64_BAS = UNDEFINED Then
         Widget(WidgetManager.current).clicked = clicked
 
         ' Toggle if this is a toggle button
-        If Widget(WidgetManager.current).flags Then
+        If clicked And Widget(WidgetManager.current).flags Then
             Widget(WidgetManager.current).cmd.depressed = Not Widget(WidgetManager.current).cmd.depressed
         End If
     End Sub
@@ -838,6 +838,11 @@ $If IMGUI64_BAS = UNDEFINED Then
 
                         Case 45 ' DASH (minus -) key was pressed
                             If Widget(WidgetManager.current).flags And TEXT_BOX_DASH Then ' are dashes allowed?
+                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
+                            End If
+
+                        Case 46 ' DOT
+                            If Widget(WidgetManager.current).flags And TEXT_BOX_DOT Then ' are dashes allowed?
                                 K = Chr$(InputManager.keyCode) ' yes, save the keystroke
                             End If
 

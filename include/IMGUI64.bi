@@ -24,15 +24,16 @@ $If IMGUI64_BI = UNDEFINED Then
     ' CONSTANTS
     '-----------------------------------------------------------------------------------------------------
     ' These are flags that can be used by the text box widget
-    Const TEXT_BOX_ALPHA = 1 'alphabetic input allowed
-    Const TEXT_BOX_NUMERIC = 2 'numeric input allowed
-    Const TEXT_BOX_SYMBOLS = 4 'all symbols allowed
-    Const TEXT_BOX_DASH = 8 'dash (-) symbol allowed
-    Const TEXT_BOX_PAREN = 16 'parenthesis allowed
+    Const TEXT_BOX_ALPHA = 1 ' alphabetic input allowed
+    Const TEXT_BOX_NUMERIC = 2 ' numeric input allowed
+    Const TEXT_BOX_SYMBOLS = 4 ' all symbols allowed
+    Const TEXT_BOX_DASH = 8 ' dash (-) symbol allowed
+    Const TEXT_BOX_DOT = 16 ' dot allowed
+    Const TEXT_BOX_PAREN = 32 ' parenthesis allowed
     Const TEXT_BOX_EVERYTHING = TEXT_BOX_ALPHA Or TEXT_BOX_NUMERIC Or TEXT_BOX_SYMBOLS Or TEXT_BOX_DASH Or TEXT_BOX_PAREN
-    Const TEXT_BOX_LOWER = 32 'lower case only
-    Const TEXT_BOX_UPPER = 64 'upper case only
-    Const TEXT_BOX_PASSWORD = 128 'password * only
+    Const TEXT_BOX_LOWER = 64 ' lower case only
+    Const TEXT_BOX_UPPER = 128 ' upper case only
+    Const TEXT_BOX_PASSWORD = 256 ' password * only
 
     ' Widget types (add constants here for new types)
     Const WIDGET_PUSH_BUTTON = 1

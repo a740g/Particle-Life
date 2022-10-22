@@ -3,11 +3,28 @@
 ' Copyright (c) 2022 Samuel Gomes
 '---------------------------------------------------------------------------------------------------------
 
+'---------------------------------------------------------------------------------------------------------
+' HEADER FILES
+'---------------------------------------------------------------------------------------------------------
 '$Include:'include/IMGUI64.bi'
+'---------------------------------------------------------------------------------------------------------
 
+'---------------------------------------------------------------------------------------------------------
+' CONSTANTS
+'---------------------------------------------------------------------------------------------------------
 Const ATOMS_DEFAULT = 300 ' this is the default numbers of atoms we start in each group
 Const GROUPS_MAX = 7 ' maximum number of groups in the universe
 
+Const UI_WIDGET_HEIGHT = 24 ' defaut widget height
+Const UI_WIDGET_SPACE = 4 ' space between widgets
+Const UI_PUSH_BUTTON_WIDTH_LARGE = 160
+Const UI_PUSH_BUTTON_WIDTH_SMALL = 24
+Const UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMALL * 2) - (UI_WIDGET_SPACE * 2)
+'---------------------------------------------------------------------------------------------------------
+
+'---------------------------------------------------------------------------------------------------------
+' USER DEFINED TYPES
+'---------------------------------------------------------------------------------------------------------
 ' A typical 2D floating point vector
 Type Vector2DFType
     x As Single
@@ -41,81 +58,129 @@ Type AtomType
     velocity As Vector2DFType ' managed by RunUniverse()
 End Type
 
-Type UIType
-    showButton As Long
-    resetButton As Long
-    randomButton As Long
-    exitButton As Long
+Type UIType ' bunch of UI widgets to change stuff
+    start As Vector2DType
+    cmdShow As Long ' hide / show UI
+    cmdExit As Long ' exit button
+    cmdShowFPS As Long ' hide / show FPS
+    cmdReset As Long ' reset to defaults
+    cmdRandom As Long ' random madness
+    cmdColorsDec As Long
+    txtColors As Long
+    cmdColorsInc As Long
+    cmdAtomsDec As Long
+    txtAtoms As Long
+    cmdAtomsInc As Long
+    cmdAtomSizeDec As Long
+    txtAtomSize As Long
+    cmdAtomSizeInc As Long
 End Type
+'---------------------------------------------------------------------------------------------------------
 
-
+'---------------------------------------------------------------------------------------------------------
+' GLOBAL VARIABLES
+'---------------------------------------------------------------------------------------------------------
 Dim Shared UI As UIType ' user interface controls
 Dim Shared Universe As UniverseType ' Universe
 Dim Shared GroupTable(1 To GROUPS_MAX) As GroupNameType ' Group table
 ReDim Shared Group(1 To 1) As GroupType ' Group
 ReDim Shared Atom(1 To 1, 1 To 1) As AtomType ' Atom
+'---------------------------------------------------------------------------------------------------------
 
-
-Screen _NewImage(DesktopWidth \ 2, DesktopHeight \ 2, 32)
+'---------------------------------------------------------------------------------------------------------
+' PROGRAM ENTRY POINT
+'---------------------------------------------------------------------------------------------------------
+Screen _NewImage(DesktopWidth, DesktopHeight, 32)
 FullScreen SquarePixels , Smooth
 PrintMode KeepBackground
 Randomize Timer
-
-InitializeUI
 
 ' Setup universe
 Universe.size.x = Width
 Universe.size.y = Height
 Universe.atoms = ATOMS_DEFAULT
 
+InitializeUI ' initialize the UI
 InitializeGroupTable ' setup the group table
 
 ' Add some groups
 AddGroup
 AddGroup
 AddGroup
-AddGroup
-
-ShowUI
+'AddGroup
 
 ' Main loop
 Do
     RunUniverse ' make the universe go
 
-    Color White, Black
+    Color White, Black ' This is required since the UI code can change the colors
     Cls ' clear the framebuffer
 
     DrawUniverse ' draw the universe
-    Locate 1, 1: Print CalculateFPS; "FPS @ ("; Universe.size.x; "x"; Universe.size.y; ")"
-    UpdateUI
+    If PushButtonDepressed(UI.cmdShowFPS) Then PrintString (0, 0), Str$(CalculateFPS) + " FPS @" + Str$(Universe.size.x) + " x" + Str$(Universe.size.y)
+    WidgetUpdate
 
     Display ' flip the framebuffer
 
-    Limit 60 ' let's not get out of control
-Loop Until InputManager.keyCode = KEY_ESCAPE
+    Limit 120 ' let's not get out of control
+Loop Until InputManager.keyCode = KEY_ESCAPE Or WidgetClicked(UI.cmdExit)
 
-HideUI
-FinalizeUI
+WidgetFreeAll
 
 System
+'---------------------------------------------------------------------------------------------------------
 
-
+'---------------------------------------------------------------------------------------------------------
+' FUNCTIONS AND SUBROUTINES
+'---------------------------------------------------------------------------------------------------------
+' This initializes all the static UI that will always be there
+' Also call the dynamic UI function
 Sub InitializeUI
-    UI.exitButton = PushButtonNew("click me!", 64, 16, 80, 32, FALSE)
+    ' Calculate UI start left
+    UI.start.x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE
+    UI.start.y = UI_WIDGET_SPACE
+    UI.cmdShow = PushButtonNew("Show Controls", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
+    PushButtonDepressed UI.cmdShow, TRUE
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdExit = PushButtonNew("Exit", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdShowFPS = PushButtonNew("Show FPS", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdReset = PushButtonNew("Reset", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRandom = PushButtonNew("Random", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdColorsDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtColors = TextBoxNew(Str$(Universe.groups), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdColorsInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdAtomsDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtAtoms = TextBoxNew(Str$(Universe.groups), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdAtomsInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdAtomSizeDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtAtomSize = TextBoxNew(Str$(Universe.groups), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdAtomSizeInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
 End Sub
 
+' This makes all available UI visible
 Sub ShowUI
 End Sub
 
-Sub UpdateUI
-    WidgetUpdate
-End Sub
-
+' This makes all available UI invisivble (except the main button)
 Sub HideUI
 End Sub
 
-Sub FinalizeUI
-    WidgetFreeAll
+' Add UI for new groups
+Sub AddGroupUI
+End Sub
+
+' Remove UI for deleted groups
+Sub RemoveGroupUI
+End Sub
+
+' Validate UI values
+Sub ValidateUI
 End Sub
 
 ' Initializes the group name table along with the colors
@@ -241,19 +306,19 @@ End Sub
 Sub DrawUniverse
     Dim As Unsigned Long g, a
     For g = 1 To Universe.groups
+        Color Group(g).clr
         For a = 1 To Universe.atoms
-            If Group(g).atomSize > 1 Then
-                CircleFill Atom(g, a).position.x, Atom(g, a).position.y, Group(g).atomSize, Group(g).clr
-            Else
-                PSet (Atom(g, a).position.x, Atom(g, a).position.y), Group(g).clr
-            End If
+            CircleFill Atom(g, a).position.x, Atom(g, a).position.y, Group(g).atomSize
         Next
     Next
 End Sub
 
 
 ' Draws a filled circle
-Sub CircleFill (cx As Long, cy As Long, r As Long, c As Unsigned Long)
+' CX = center x coordinate
+' CY = center y coordinate
+'  R = radius
+Sub CircleFill (cx As Long, cy As Long, r As Long)
     Dim As Long Radius, RadiusError, X, Y
 
     Radius = Abs(r)
@@ -262,19 +327,19 @@ Sub CircleFill (cx As Long, cy As Long, r As Long, c As Unsigned Long)
     Y = 0
 
     If Radius = 0 Then
-        PSet (cx, cy), c
+        PSet (cx, cy)
         Exit Sub
     End If
 
-    Line (cx - X, cy)-(cx + X, cy), c, BF
+    Line (cx - X, cy)-(cx + X, cy), , BF
 
     While X > Y
         RadiusError = RadiusError + Y * 2 + 1
 
         If RadiusError >= 0 Then
             If X <> Y + 1 Then
-                Line (cx - Y, cy - X)-(cx + Y, cy - X), c, BF
-                Line (cx - Y, cy + X)-(cx + Y, cy + X), c, BF
+                Line (cx - Y, cy - X)-(cx + Y, cy - X), , BF
+                Line (cx - Y, cy + X)-(cx + Y, cy + X), , BF
             End If
             X = X - 1
             RadiusError = RadiusError - X * 2
@@ -282,8 +347,8 @@ Sub CircleFill (cx As Long, cy As Long, r As Long, c As Unsigned Long)
 
         Y = Y + 1
 
-        Line (cx - X, cy - Y)-(cx + X, cy - Y), c, BF
-        Line (cx - X, cy + Y)-(cx + X, cy + Y), c, BF
+        Line (cx - X, cy - Y)-(cx + X, cy - Y), , BF
+        Line (cx - X, cy + Y)-(cx + X, cy + Y), , BF
     Wend
 End Sub
 
@@ -311,6 +376,11 @@ Function CalculateFPS~&
 
     CalculateFPS = finalFPS
 End Function
+'---------------------------------------------------------------------------------------------------------
 
+'---------------------------------------------------------------------------------------------------------
+' MODULE FILES
+'---------------------------------------------------------------------------------------------------------
 '$Include:'include/IMGUI64.bas'
+'---------------------------------------------------------------------------------------------------------
 
