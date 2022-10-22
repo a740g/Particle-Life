@@ -16,7 +16,7 @@ End Type
 
 ' This defines the universe
 Type UniverseType
-    size As VectorType ' this MUST be set by the user - typically window width & height
+    size As Vector2DType ' this MUST be set by the user - typically window width & height
     groups As Unsigned Long ' managed by AddGroup() & RemoveGroup()
     atoms As Unsigned Long ' this MUST be set by the user - typically from the UI
 End Type
@@ -37,8 +37,8 @@ End Type
 
 ' This defines the atom
 Type AtomType
-    position As VectorType ' managed by InitializeGroup() & RunUniverse()
-    velocity As VectorType ' managed by RunUniverse()
+    position As Vector2DFType ' managed by InitializeGroup() & RunUniverse()
+    velocity As Vector2DFType ' managed by RunUniverse()
 End Type
 
 Type UIType
@@ -82,16 +82,17 @@ ShowUI
 Do
     RunUniverse ' make the universe go
 
+    Color White, Black
     Cls ' clear the framebuffer
 
     DrawUniverse ' draw the universe
-    Locate 1, 1: Print CalculateFPS; "FPS @ ("; Universe.size.x; "x"; Universe.size.y; ")"; "Button event ="; ButtonEvent(UI.exitButton)
+    Locate 1, 1: Print CalculateFPS; "FPS @ ("; Universe.size.x; "x"; Universe.size.y; ")"
     UpdateUI
 
     Display ' flip the framebuffer
 
     Limit 60 ' let's not get out of control
-Loop Until KeyHit = 27
+Loop Until InputManager.keyCode = KEY_ESCAPE
 
 HideUI
 FinalizeUI
@@ -100,27 +101,21 @@ System
 
 
 Sub InitializeUI
-    UI.exitButton = ButtonNew(64, 16, Gray)
-
-    ButtonChecking TRUE
+    UI.exitButton = PushButtonNew("click me!", 64, 16, 80, 32, FALSE)
 End Sub
 
 Sub ShowUI
-    ButtonShow UI.exitButton
 End Sub
 
 Sub UpdateUI
-    ButtonPut 200, 200, UI.exitButton
+    WidgetUpdate
 End Sub
 
 Sub HideUI
-    ButtonHide UI.exitButton
 End Sub
 
 Sub FinalizeUI
-    ButtonChecking FALSE
-
-    ButtonFree UI.exitButton
+    WidgetFreeAll
 End Sub
 
 ' Initializes the group name table along with the colors

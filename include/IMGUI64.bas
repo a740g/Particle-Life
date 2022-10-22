@@ -1,10 +1,10 @@
 '---------------------------------------------------------------------------------------------------------
 ' QB64-PE Immediate mode GUI Library
 '
-' This is very loosely based on Terry Ritchie's work: GLINPUT, RQBL
-' Note that this library has an input manager and a focus on immediate mode UI
-' Which means all UI rendering is destructive and the framebuffer needs to be redrawn every frame
-' As such lot of things have changed and this will not work as a drop-in replacement for Terry's libraries
+' This is very loosely based on Terry Ritchie's GLINPUT & RQBL
+' The library has an input manager, tabbed focus and implements text box and push button widgets (so far)
+' This is an immediate mode UI. Which means all UI rendering is destructive
+' The framebuffer needs to be redrawn every frame and nothing the widgets drawn over is preserved
 ' This was born because I needed a small, fast and intuitive GUI libary for games and graphic applications
 ' This is a work in progress
 '
@@ -17,74 +17,6 @@
 '$Include:'./IMGUI64.bi'
 '---------------------------------------------------------------------------------------------------------
 
-' TODO:
-'   Handle visible flag correctly for all routines
-'   Handle disabled flag correctly for all routines
-
-
-'Dim mybutton%
-'Dim x%, y%
-'Dim helloworldinp%
-'Dim helloworld$
-
-'Screen _NewImage(800, 600, 32)
-'_ScreenMove _Middle
-
-'mybutton% = ButtonNew(Chr$(17), 24, 24)
-'x% = (800 - ButtonWidth(mybutton%)) \ 2
-'y% = (600 - ButtonHeight(mybutton%)) \ 2
-'ButtonPut x%, y%, mybutton%
-'ButtonShow mybutton%
-
-'helloworldinp% = GLIInput(100, 100, 128, TEXT_BOX_ALPHA, "test me now")
-
-'Do
-'    Cls , NP_Blue
-
-'    WidgetUpdate
-
-'    GLIUpdate
-
-'    Locate 10, 1: Print "Real time: "; GLIOutput$(helloworldinp%); " ";
-
-'    ButtonUpdate
-'    Select Case ButtonEvent(mybutton%)
-'        Case 0
-'            Locate 11, 1
-'            Print "NO INTERACTION";
-'            ButtonOff mybutton%
-'        Case 1
-'            Locate 11, 1
-'            Print " LEFT BUTTON  ";
-'            ButtonOn mybutton%
-'        Case 2
-'            Locate 11, 1
-'            Print " RIGHT BUTTON ";
-'            ButtonOn mybutton%
-
-'        Case 3
-'            Locate 11, 1
-'            Print "   HOVERING   ";
-'            ButtonOff mybutton%
-'    End Select
-
-'    _Display
-
-'    _Limit 60
-'Loop Until InputManagerGetKey& = 27 Or GLIEntered(helloworldinp%)
-
-'helloworld$ = GLIOutput$(helloworldinp%)
-
-'GLIClose helloworldinp%
-'ButtonFree mybutton%
-
-'_AutoDisplay
-
-'Locate 7, 1: Print "Final    : "; helloworld$
-
-'End
-
-
 $If IMGUI64_BAS = UNDEFINED Then
     $Let IMGUI64_BAS = TRUE
 
@@ -93,7 +25,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------
 
     ' Calculates the bounding rectangle for a object given its position & size
-    Sub MakeRectangle (p As Vector2DType, s As Vector2DType, r As RectangleType)
+    Sub RectangleCreate (p As Vector2DType, s As Vector2DType, r As RectangleType)
         r.a.x = p.x
         r.a.y = p.y
         r.b.x = p.x + s.x - 1
@@ -116,39 +48,47 @@ $If IMGUI64_BAS = UNDEFINED Then
     ' Draws a basic 3D box
     ' This can be improved ... a lot XD
     ' Also all colors are hardcoded
-    Sub WidgetDrawBox3D (x1 As Long, y1 As Long, x2 As Long, y2 As Long, isRaised As Byte)
-        If isRaised Then
-            Line (x1, y1)-(x2 - 1, y1), LightGray
-            Line (x1, y1)-(x1, y2 - 1), LightGray
-            Line (x1, y2)-(x2, y2), DimGray
-            Line (x2, y1)-(x2, y2 - 1), DimGray
-        Else
-            Line (x1, y1)-(x2 - 1, y1), DimGray
-            Line (x1, y1)-(x1, y2 - 1), DimGray
-            Line (x1, y2)-(x2, y2), LightGray
-            Line (x2, y1)-(x2, y2 - 1), LightGray
+    Sub WidgetDrawBox3D (r As RectangleType, depressed As Byte)
+        If depressed Then ' sunken
+            Line (r.a.x, r.a.y)-(r.b.x - 1, r.a.y), DimGray
+            Line (r.a.x, r.a.y)-(r.a.x, r.b.y - 1), DimGray
+            Line (r.a.x, r.b.y)-(r.b.x, r.b.y), LightGray
+            Line (r.b.x, r.a.y)-(r.b.x, r.b.y - 1), LightGray
+        Else ' raised
+            Line (r.a.x, r.a.y)-(r.b.x - 1, r.a.y), LightGray
+            Line (r.a.x, r.a.y)-(r.a.x, r.b.y - 1), LightGray
+            Line (r.a.x, r.b.y)-(r.b.x, r.b.y), DimGray
+            Line (r.b.x, r.a.y)-(r.b.x, r.b.y - 1), DimGray
         End If
 
-        Line (x1 + 1, y1 + 1)-(x2 - 1, y2 - 1), Gray, BF
+        Line (r.a.x + 1, r.a.y + 1)-(r.b.x - 1, r.b.y - 1), Gray, BF
     End Sub
 
 
     ' This routine ties the whole update system and makes everything go
     Sub WidgetUpdate
+        Static blinkTick As Integer64 ' stores the last blink tick (oooh!)
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
         Shared InputManager As InputManagerType
-        Dim h As Long, r As RectangleType
+        Dim h As Long, r As RectangleType, currentTick As Integer64
 
-        InputManagerUpdate
+        InputManagerUpdate ' We will gather input even if there are no widgets
 
-        If UBound(Widget) = 0 Then Exit Sub ' Exit if there is nothing to do
+        If UBound(Widget) = NULL Then Exit Sub ' Exit if there is nothing to do
+
+        ' Blinky stuff
+        currentTick = GetTicks
+        If currentTick > blinkTick + WIDGET_BLINK_INTERVAL Then
+            blinkTick = currentTick
+            WidgetManager.focusBlink = Not WidgetManager.focusBlink
+        End If
 
         ' Manage widget focus stuff
-        If WidgetManager.current = 0 Then WidgetManager.current = 1 ' if this is first time set current widget to 1
+        If WidgetManager.current = NULL Then WidgetManager.current = 1 ' if this is first time set current widget to 1
 
         ' Shift focus if it was requested
-        If WidgetManager.forced <> 0 Then ' being forced to a widget
+        If WidgetManager.forced <> NULL Then ' being forced to a widget
             If WidgetManager.forced = -1 Then ' yes, to the next one?
                 h = WidgetManager.current ' set scanner to current widget
                 Do ' start scanning
@@ -156,12 +96,12 @@ $If IMGUI64_BAS = UNDEFINED Then
                     If h > UBound(Widget) Then h = 1 ' return to start of widget array if limit reached
                     If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled Then WidgetManager.current = h ' set current widget if in use
                 Loop Until WidgetManager.current = h ' leave scanner when a widget in use is found
-                WidgetManager.forced = 0 ' reset force indicator
+                WidgetManager.forced = NULL ' reset force indicator
             Else ' yes, to a specific input field
                 If Widget(WidgetManager.forced).inUse And Widget(WidgetManager.forced).visible And Not Widget(WidgetManager.forced).disabled Then
                     WidgetManager.current = WidgetManager.forced ' set the current widget
                 End If
-                WidgetManager.forced = 0 ' reset force indicator
+                WidgetManager.forced = NULL ' reset force indicator
             End If
         End If
 
@@ -171,37 +111,47 @@ $If IMGUI64_BAS = UNDEFINED Then
             InputManager.keyCode = NULL ' consume the key
         End If
 
-        ' Check if the user to trying to click on something to change focus
+        ' Check if the user is trying to click on something to change focus
         For h = 1 To UBound(Widget)
             If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled And h <> WidgetManager.current Then
 
                 ' Find the bounding box
-                MakeRectangle Widget(WidgetManager.current).position, Widget(WidgetManager.current).size, r
+                RectangleCreate Widget(h).position, Widget(h).size, r
 
                 If InputManager.mouseLeftClicked Then
                     If RectangleContainsRectangle(r, InputManager.mouseLeftButtonClickedRectangle) Then
                         WidgetManager.forced = h ' Move to the specific widget
-                        InputManager.mouseLeftClicked = FALSE ' consume mouse click
                     End If
                 End If
 
                 If InputManager.mouseRightClicked Then
                     If RectangleContainsRectangle(r, InputManager.mouseRightButtonClickedRectangle) Then
                         WidgetManager.forced = h ' Move to the specific widget
-                        InputManager.mouseRightClicked = FALSE ' consume mouse click
                     End If
                 End If
             End If
         Next
 
-        ' Update individual widgets
-        PushButtonUpdate
-        TextBoxUpdate
 
-        ' Draw the widget
+        ' Run update for the widget that has focus
+        If Widget(WidgetManager.current).inUse And Widget(WidgetManager.current).visible And Not Widget(WidgetManager.current).disabled Then
+            Select Case Widget(WidgetManager.current).class
+                Case WIDGET_PUSH_BUTTON
+                    __PushButtonUpdate
+                Case WIDGET_TEXT_BOX
+                    __TextBoxUpdate
+            End Select
+        End If
+
+        ' Now draw all the widget to the framebuffer
         For h = 1 To UBound(Widget)
-            If Widget(h).inUse And Widget(h).visible And Not Widget(h).disabled Then
-                ' Draw
+            If Widget(h).inUse And Widget(h).visible Then
+                Select Case Widget(h).class
+                    Case WIDGET_PUSH_BUTTON
+                        __PushButtonDraw h
+                    Case WIDGET_TEXT_BOX
+                        __TextBoxDraw h
+                End Select
             End If
         Next
     End Sub
@@ -295,13 +245,13 @@ $If IMGUI64_BAS = UNDEFINED Then
 
     ' Returns the handle number of the widget that has focus
     ' The function will return 0 if there are no active widgets
-    Function CurrentWidget&
+    Function WidgetCurrent&
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
-        CurrentWidget = WidgetManager.current
+        WidgetCurrent = WidgetManager.current
     End Function
 
 
@@ -309,13 +259,13 @@ $If IMGUI64_BAS = UNDEFINED Then
     ' The focus changes on the next update
     ' -1 = move to next widget
     ' >0 = move to a specific widget
-    Sub CurrentWidget (handle As Long)
+    Sub WidgetCurrent (handle As Long)
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
 
-        If UBound(Widget) = 0 Then Exit Sub ' Leave if nothing is active
+        If UBound(Widget) = NULL Then Exit Sub ' Leave if nothing is active
 
-        If handle < -1 Or handle = 0 Or handle > UBound(Widget) Then ' is handle valid?
+        If handle < -1 Or handle = NULL Or handle > UBound(Widget) Then ' is handle valid?
             Error ERROR_INVALID_HANDLE
         End If
 
@@ -324,11 +274,11 @@ $If IMGUI64_BAS = UNDEFINED Then
 
 
     ' Closes a specific widget
-    Sub FreeWidget (handle As Long)
+    Sub WidgetFree (handle As Long)
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
 
-        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+        If UBound(Widget) = NULL Then Exit Sub ' leave if nothing is active
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then ' is handle valid?
             Error ERROR_INVALID_HANDLE
@@ -337,21 +287,20 @@ $If IMGUI64_BAS = UNDEFINED Then
         ' We will not bother resizing the widget array so that subsequent allocations will be faster
         ' So just set the 'inUse' member to false
         Widget(handle).inUse = FALSE
-        ' Set focus on the next widget
-        CurrentWidget -1
+        If handle = WidgetManager.current Then WidgetManager.forced = -1 ' Set focus on the next widget if it is current
     End Sub
 
 
     ' Closes all widgets
-    Sub FreeAllWidgets
+    Sub WidgetFreeAll
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
 
-        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
+        If UBound(Widget) = NULL Then Exit Sub ' leave if nothing is active
 
-        ReDim Widget(0 To 0) As WidgetType ' reset the widget array
-        WidgetManager.current = 0
-        WidgetManager.forced = 0
+        ReDim Widget(NULL To NULL) As WidgetType ' reset the widget array
+        WidgetManager.current = NULL
+        WidgetManager.forced = NULL
     End Sub
 
 
@@ -359,7 +308,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetText$ (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -373,7 +322,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetText (handle As Long, text As String)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -390,13 +339,13 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function TextBoxEntered%% (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function ' leave if nothing is active
+        If UBound(Widget) = NULL Then Exit Function ' leave if nothing is active
 
         If handle < 1 Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
             Error ERROR_INVALID_HANDLE
         End If
 
-        If handle > 0 Then
+        If handle > NULL Then
             TextBoxEntered = Widget(handle).txt.entered
         Else
             Dim h As Long
@@ -415,12 +364,17 @@ $If IMGUI64_BAS = UNDEFINED Then
 
 
     ' Sets up a widget and returns a handle value that points to that widget
-    Function NewWidget& (class As Long)
+    Function __WidgetNew& (class As Long)
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
 
-        If class < 0 Or class >= WIDGET_CLASS_COUNT Then
+        If class < NULL Or class > WIDGET_CLASS_COUNT Then
             Error ERROR_FEATURE_UNAVAILABLE
+        End If
+
+        If UBound(Widget) = NULL Then ' Reallocate the widget array if this the first time
+            ReDim Widget(1 To 1) As WidgetType
+            Widget(1).inUse = FALSE
         End If
 
         Dim h As Long ' the new handle number
@@ -434,43 +388,41 @@ $If IMGUI64_BAS = UNDEFINED Then
             ReDim Preserve Widget(1 To h) As WidgetType ' increase array size
         End If
 
-        If WidgetManager.current = 0 Then WidgetManager.current = 1 ' first time called set to 1
-
         Dim temp As WidgetType
         Widget(h) = temp ' ensure everything is wiped
 
         Widget(h).inUse = TRUE
         Widget(h).class = class ' set the class
 
-        NewWidget = h ' return the handle
+        __WidgetNew = h ' return the handle
     End Function
 
 
     ' Duplicates a widget from a designated handle
     ' Returns handle value greater than 0 indicating the new widgets handle
-    Function CopyWidget& (handle As Long)
+    Function WidgetCopy& (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
         End If
 
         Dim nh As Long
-        nh = NewWidget(0) ' creat a new widget of class 0. Whatever that is, is not important
+        nh = __WidgetNew(NULL) ' creat a new widget of class 0. Whatever that is, is not important
         Widget(nh) = Widget(handle) ' copy all properties
 
-        CopyWidget = nh ' return new handle
+        WidgetCopy = nh ' return new handle
     End Function
 
 
     ' Creates a new button
-    Function NewPushButton& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long)
+    Function PushButtonNew& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long, toggleButton As Byte)
         Shared Widget() As WidgetType
         Dim b As Long
 
-        b = NewWidget(WIDGET_PUSH_BUTTON)
+        b = __WidgetNew(WIDGET_PUSH_BUTTON)
 
         Widget(b).text = text
         Widget(b).position.x = x
@@ -479,20 +431,20 @@ $If IMGUI64_BAS = UNDEFINED Then
         Widget(b).size.y = h
         Widget(b).visible = TRUE
 
-        ' Class specific stuff are all 0 thanks to NewWidget()
-        ' So, we will not bother changing anything
+        ' Set class specific stuff
+        Widget(b).flags = toggleButton
 
-        NewPushButton = b
+        PushButtonNew = b
     End Function
 
 
     ' Create a new input box
-    Function NewInputBox& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long, flags As Unsigned Long)
+    Function TextBoxNew& (text As String, x As Long, y As Long, w As Unsigned Long, h As Unsigned Long, flags As Unsigned Long)
         Shared Widget() As WidgetType
 
         Dim t As Long ' the new handle number
 
-        t = NewWidget(WIDGET_TEXT_BOX)
+        t = __WidgetNew(WIDGET_TEXT_BOX)
 
         Widget(t).text = text
         Widget(t).position.x = x
@@ -502,14 +454,14 @@ $If IMGUI64_BAS = UNDEFINED Then
         Widget(t).visible = TRUE
 
         ' Set class specific stuff
-        Widget(t).txt.flags = flags ' store the flags
+        Widget(t).flags = flags ' store the flags
         Widget(t).txt.textPosition = 1 ' set the cursor at the beginning of the input line
         Widget(t).txt.boxPosition = 1
         Widget(t).txt.boxTextLength = (w - PrintWidth("W") * 2) \ PrintWidth("W") ' calculate the number of character we can show at a time
         Widget(t).txt.boxStartCharacter = 1
         Widget(t).txt.insertMode = TRUE ' initial insert mode to insert
 
-        NewInputBox = t
+        TextBoxNew = t
     End Function
 
 
@@ -517,7 +469,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetVisible (handle As Long, visible As Byte)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -531,7 +483,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetVisible%% (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -545,7 +497,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetDisabled (handle As Long, disabled As Byte)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -559,7 +511,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetDisabled%% (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -572,7 +524,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetPositionX (handle As Long, x As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -585,7 +537,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetPositionX& (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -598,7 +550,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetPositionY (handle As Long, y As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -611,7 +563,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetPositionY& (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -624,7 +576,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetSizeX (handle As Long, x As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -637,7 +589,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetSizeX& (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -650,7 +602,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Sub WidgetSizeY (handle As Long, y As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -663,7 +615,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetSizeY& (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -676,7 +628,7 @@ $If IMGUI64_BAS = UNDEFINED Then
     Function WidgetClicked%% (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Then
             Error ERROR_INVALID_HANDLE
@@ -686,60 +638,56 @@ $If IMGUI64_BAS = UNDEFINED Then
     End Function
 
 
-    Sub PushButtonState (handle As Long, state As Byte)
+    Sub PushButtonDepressed (handle As Long, depressed As Byte)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
             Error ERROR_INVALID_HANDLE
         End If
 
-        Widget(handle).cmd.state = state
+        Widget(handle).cmd.depressed = depressed
     End Sub
 
 
-    Function PushButtonState%% (handle As Long)
+    Function PushButtonDepressed%% (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Function
+        If UBound(Widget) = NULL Then Exit Function
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
             Error ERROR_INVALID_HANDLE
         End If
 
-        PushButtonState = Widget(handle).cmd.state
+        PushButtonDepressed = Widget(handle).cmd.depressed
     End Function
 
 
     ' Toggles the button specified between pressed/depressed
-    Sub PushButtonToggleState (handle As Long)
+    Sub PushButtonToggleDepressed (handle As Long)
         Shared Widget() As WidgetType
 
-        If UBound(Widget) = 0 Then Exit Sub
+        If UBound(Widget) = NULL Then Exit Sub
 
         If handle < 1 Or handle > UBound(Widget) Or Not Widget(handle).inUse Or Widget(handle).class <> WIDGET_PUSH_BUTTON Then
             Error ERROR_INVALID_HANDLE
         End If
 
-        Widget(handle).cmd.state = Not Widget(handle).cmd.state
+        Widget(handle).cmd.depressed = Not Widget(handle).cmd.depressed
     End Sub
 
 
     ' This will update the status of a button (state & clicked etc.) based on user input
-    ' This always works on the button that has focus
-    Sub PushButtonUpdate
+    ' The calling function must ensure that this is called only for visible, enabled and the correct widget with focus
+    Sub __PushButtonUpdate
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
         Shared InputManager As InputManagerType
         Dim r As RectangleType, clicked As Byte
 
-        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
-
-        If Widget(WidgetManager.current).class <> WIDGET_PUSH_BUTTON Then Exit Sub ' leave if the currently focused widget is not a button
-
         ' Find the bounding box
-        MakeRectangle Widget(WidgetManager.current).position, Widget(WidgetManager.current).size, r
+        RectangleCreate Widget(WidgetManager.current).position, Widget(WidgetManager.current).size, r
 
         If InputManager.mouseLeftClicked Then
             If RectangleContainsRectangle(r, InputManager.mouseLeftButtonClickedRectangle) Then
@@ -760,433 +708,280 @@ $If IMGUI64_BAS = UNDEFINED Then
             InputManager.keyCode = NULL ' consume keystroke
         End If
 
-        If clicked Then
-            Widget(WidgetManager.current).clicked = TRUE
+        Widget(WidgetManager.current).clicked = clicked
 
-            ' Toggle if this is a toggle button
-            If Widget(WidgetManager.current).cmd.toggle Then
-                Widget(WidgetManager.current).cmd.state = Not Widget(WidgetManager.current).cmd.state
-            End If
+        ' Toggle if this is a toggle button
+        If Widget(WidgetManager.current).flags Then
+            Widget(WidgetManager.current).cmd.depressed = Not Widget(WidgetManager.current).cmd.depressed
         End If
     End Sub
 
 
     ' This will update the state of text box based on user input
-    ' This always works on the text box that has focus
-    Sub TextBoxUpdate
+    ' The calling function must ensure that this is called only for visible, enabled and the correct widget with focus
+    Sub __TextBoxUpdate
         Shared Widget() As WidgetType
         Shared WidgetManager As WidgetManagerType
         Shared InputManager As InputManagerType
 
-        If UBound(Widget) = 0 Then Exit Sub ' leave if nothing is active
-
-        If Widget(WidgetManager.current).class <> WIDGET_TEXT_BOX Then Exit Sub ' leave if the currently focused widget is not a text box
-
-
         ' First process any pressed keys
         Select Case InputManager.keyCode ' which key was hit?
-            Case 20992 ' INSERT key was pressed
-                TextBox(TextBoxSettings.current).insertMode = Not TextBox(TextBoxSettings.current).insertMode
+            Case KEY_INSERT
+                Widget(WidgetManager.current).txt.insertMode = Not Widget(WidgetManager.current).txt.insertMode
 
-            Case 19712 ' RIGHT ARROW key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                If TextBox(TextBoxSettings.current).cursorPosition > Len(TextBox(TextBoxSettings.current).text) + 1 Then ' will this take the cursor too far?
-                    TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' yes, keep the cursor at the end of the line
+                InputManager.keyCode = NULL ' consume the key
+
+            Case KEY_RIGHT_ARROW
+                Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition + 1 ' increment the cursor position
+                If Widget(WidgetManager.current).txt.textPosition > Len(Widget(WidgetManager.current).text) + 1 Then ' will this take the cursor too far?
+                    Widget(WidgetManager.current).txt.textPosition = Len(Widget(WidgetManager.current).text) + 1 ' yes, keep the cursor at the end of the line
                 End If
 
                 ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
-                If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                    TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+                Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxPosition + 1
+
+                If Widget(WidgetManager.current).txt.boxPosition > Widget(WidgetManager.current).txt.textPosition Then
+                    Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.textPosition
                 End If
 
-            Case 19200 ' LEFT ARROW key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
-                If TextBox(TextBoxSettings.current).cursorPosition < 1 Then ' did cursor go beyone beginning of line?
-                    TextBox(TextBoxSettings.current).cursorPosition = 1 ' yes, keep the cursor at the beginning of the line
+                If Widget(WidgetManager.current).txt.boxPosition > Widget(WidgetManager.current).txt.boxTextLength + 1 Then
+                    Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxTextLength + 1
+
+                    Widget(WidgetManager.current).txt.boxStartCharacter = 1 + Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.boxTextLength
+                End If
+
+                InputManager.keyCode = NULL ' consume the key
+
+            Case KEY_LEFT_ARROW
+                Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition - 1 ' decrement the cursor position
+                If Widget(WidgetManager.current).txt.textPosition < 1 Then ' did cursor go beyone beginning of line?
+                    Widget(WidgetManager.current).txt.textPosition = 1 ' yes, keep the cursor at the beginning of the line
                 End If
 
                 ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
-                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = 1
-                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
-                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
+                Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxPosition - 1
+                If Widget(WidgetManager.current).txt.boxPosition < 1 Then
+                    Widget(WidgetManager.current).txt.boxPosition = 1
+                    If Widget(WidgetManager.current).txt.boxStartCharacter > 1 Then
+                        Widget(WidgetManager.current).txt.boxStartCharacter = Widget(WidgetManager.current).txt.boxStartCharacter - 1
                     End If
                 End If
 
+                InputManager.keyCode = NULL ' consume the key
 
-            Case 8 ' BACKSPACE key pressed
-                If TextBox(TextBoxSettings.current).cursorPosition > 1 Then ' is the cursor at the beginning of the line?
-                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 2) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' no, delete character
-                    TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
+            Case KEY_BACKSPACE
+                If Widget(WidgetManager.current).txt.textPosition > 1 Then ' is the cursor at the beginning of the line?
+                    Widget(WidgetManager.current).text = Left$(Widget(WidgetManager.current).text, Widget(WidgetManager.current).txt.textPosition - 2) + Right$(Widget(WidgetManager.current).text, Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.textPosition + 1) ' no, delete character
+                    Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition - 1 ' decrement the cursor position
                 End If
 
                 ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
-                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = 1
-
-                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
-                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
+                Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxPosition - 1
+                If Widget(WidgetManager.current).txt.boxPosition < 1 Then
+                    Widget(WidgetManager.current).txt.boxPosition = 1
+                    If Widget(WidgetManager.current).txt.boxStartCharacter > 1 Then
+                        Widget(WidgetManager.current).txt.boxStartCharacter = Widget(WidgetManager.current).txt.boxStartCharacter - 1
                     End If
                 End If
 
-            Case 18176 ' HOME key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = 1 ' move the cursor to the beginning of the line
-                TextBox(TextBoxSettings.current).cursorPosBox = 1
-                TextBox(TextBoxSettings.current).startVisibleChar = 1
+                InputManager.keyCode = NULL ' consume the key
 
-            Case 20224 ' END key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' move the cursor to the end of the line
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+            Case KEY_HOME
+                Widget(WidgetManager.current).txt.textPosition = 1 ' move the cursor to the beginning of the line
 
-            Case 21248 ' DELETE key was pressed
-                If TextBox(TextBoxSettings.current).cursorPosition < Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
-                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' no, delete character
+                ' Box cursor movement
+                Widget(WidgetManager.current).txt.boxPosition = 1
+                Widget(WidgetManager.current).txt.boxStartCharacter = 1
+
+                InputManager.keyCode = NULL ' consume the key
+
+            Case KEY_END
+                Widget(WidgetManager.current).txt.textPosition = Len(Widget(WidgetManager.current).text) + 1 ' move the cursor to the end of the line
+
+                ' Box cursor movement
+                Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxTextLength + 1
+                If Widget(WidgetManager.current).txt.boxPosition > Widget(WidgetManager.current).txt.textPosition Then
+                    Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.textPosition
+                End If
+                Widget(WidgetManager.current).txt.boxStartCharacter = 1 + Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.boxTextLength
+                If Widget(WidgetManager.current).txt.boxStartCharacter < 1 Then
+                    Widget(WidgetManager.current).txt.boxStartCharacter = 1
                 End If
 
-            Case 9, 13, 20480 ' TAB, ENTER or DOWN ARROW key pressed
-                If InputManager.keyCode = 13 Then TextBox(TextBoxSettings.current).entered = TRUE ' if enter key was pressed remember it (TRUE)
-                Scan = TextBoxSettings.current ' set initital point of input array scan
-                Do ' begin scanning input array
-                    Scan = Scan + 1 ' increment the scanner
-                    If Scan > UBound(TextBox) Then Scan = 1 ' go to beginning of array if the end was reached
-                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
-                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
+                InputManager.keyCode = NULL ' consume the key
 
-            Case 18432 ' UP ARROW key was pressed
-                Scan = TextBoxSettings.current ' set initial point of input array scan
-                Do ' begin scanning input array
-                    Scan = Scan - 1 ' decrement the scanner
-                    If Scan = 0 Then Scan = UBound(TextBox) ' go the end of the array if the beginning was reached
-                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
-                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
+            Case KEY_DELETE
+                If Widget(WidgetManager.current).txt.textPosition < Len(Widget(WidgetManager.current).text) + 1 Then ' is the cursor at the end of the line?
+                    Widget(WidgetManager.current).text = Left$(Widget(WidgetManager.current).text, Widget(WidgetManager.current).txt.textPosition - 1) + Right$(Widget(WidgetManager.current).text, Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.textPosition) ' no, delete character
+                End If
+
+                InputManager.keyCode = NULL ' consume the key
+
+            Case KEY_ENTER
+                Widget(WidgetManager.current).txt.entered = TRUE ' if enter key was pressed remember it (TRUE)
+                WidgetManager.forced = -1 ' Move to the next widget
+
+                InputManager.keyCode = NULL ' consume the key
 
             Case Else ' a character key was pressed
                 If InputManager.keyCode > 31 And InputManager.keyCode < 256 Then ' is it a valid ASCII displayable character?
                     Dim K As String ' yes, initialize key holder variable
+
                     Select Case InputManager.keyCode ' which alphanumeric key was pressed?
-                        Case 32 ' SPACE key was pressed
+                        Case KEY_SPACE_BAR
                             K = Chr$(InputManager.keyCode) ' save the keystroke
 
                         Case 40 To 41 ' PARENTHESIS key was pressed
-                            If (TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS) Or (TextBox(TextBoxSettings.current).allow And TEXT_BOX_PAREN) Then
+                            If (Widget(WidgetManager.current).flags And TEXT_BOX_SYMBOLS) Or (Widget(WidgetManager.current).flags And TEXT_BOX_PAREN) Then
                                 K = Chr$(InputManager.keyCode) ' if it's allowed then save the keystroke
                             End If
 
                         Case 45 ' DASH (minus -) key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_DASH Then ' are dashes allowed?
+                            If Widget(WidgetManager.current).flags And TEXT_BOX_DASH Then ' are dashes allowed?
                                 K = Chr$(InputManager.keyCode) ' yes, save the keystroke
                             End If
 
-                        Case 48 To 57 ' NUMBER key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_NUMERIC Then ' are numbers allowed?
+                        Case KEY_0 To KEY_9
+                            If Widget(WidgetManager.current).flags And TEXT_BOX_NUMERIC Then ' are numbers allowed?
                                 K = Chr$(InputManager.keyCode) ' yes, save the keystroke
                             End If
 
                         Case 33 To 47, 58 To 64, 91 To 96, 123 To 255 ' SYMBOL key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS Then ' are symbols allowed?
+                            If Widget(WidgetManager.current).flags And TEXT_BOX_SYMBOLS Then ' are symbols allowed?
                                 K = Chr$(InputManager.keyCode) ' yes, save the keystroke
                             End If
 
-                        Case 65 To 90, 97 To 122 ' ALPHABETIC key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_ALPHA Then ' are alpha keys allowed?
+                        Case KEY_LOWER_A To KEY_LOWER_Z, KEY_UPPER_A To KEY_UPPER_Z
+                            If Widget(WidgetManager.current).flags And TEXT_BOX_ALPHA Then ' are alpha keys allowed?
                                 K = Chr$(InputManager.keyCode) ' yes, save the keystroke
                             End If
                     End Select
 
                     If K <> NULLSTRING Then ' was an allowed keystroke saved?
-                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_LOWER Then ' should it be forced to lower case?
+                        If Widget(WidgetManager.current).flags And TEXT_BOX_LOWER Then ' should it be forced to lower case?
                             K = LCase$(K) ' yes, force the keystroke to lower case
                         End If
 
-                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_UPPER Then ' should it be forced to upper case?
+                        If Widget(WidgetManager.current).flags And TEXT_BOX_UPPER Then ' should it be forced to upper case?
                             K = UCase$(K) ' yes, force the keystroke to upper case
                         End If
 
-                        If TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
-                            TextBox(TextBoxSettings.current).text = TextBox(TextBoxSettings.current).text + K ' yes, simply add the keystroke to input text
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                        ElseIf TextBox(TextBoxSettings.current).insertMode Then ' no, are we in INSERT mode?
-                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' yes, insert the character
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                        If Widget(WidgetManager.current).txt.textPosition = Len(Widget(WidgetManager.current).text) + 1 Then ' is the cursor at the end of the line?
+                            Widget(WidgetManager.current).text = Widget(WidgetManager.current).text + K ' yes, simply add the keystroke to input text
+                            Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition + 1 ' increment the cursor position
+                        ElseIf Widget(WidgetManager.current).txt.insertMode Then ' no, are we in INSERT mode?
+                            Widget(WidgetManager.current).text = Left$(Widget(WidgetManager.current).text, Widget(WidgetManager.current).txt.textPosition - 1) + K + Right$(Widget(WidgetManager.current).text, Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.textPosition + 1) ' yes, insert the character
+                            Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition + 1 ' increment the cursor position
                         Else ' no, we are in OVERWRITE mode
-                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' overwrite with new character
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
+                            Widget(WidgetManager.current).text = Left$(Widget(WidgetManager.current).text, Widget(WidgetManager.current).txt.textPosition - 1) + K + Right$(Widget(WidgetManager.current).text, Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.textPosition) ' overwrite with new character
+                            Widget(WidgetManager.current).txt.textPosition = Widget(WidgetManager.current).txt.textPosition + 1 ' increment the cursor position
                         End If
 
                         ' Box cursor movement
-                        TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
-                        If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
-                            TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                            TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
+                        Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxPosition + 1
+                        If Widget(WidgetManager.current).txt.boxPosition > Widget(WidgetManager.current).txt.boxTextLength + 1 Then
+                            Widget(WidgetManager.current).txt.boxPosition = Widget(WidgetManager.current).txt.boxTextLength + 1
+                            Widget(WidgetManager.current).txt.boxStartCharacter = 1 + Len(Widget(WidgetManager.current).text) - Widget(WidgetManager.current).txt.boxTextLength
                         End If
+
+                        InputManager.keyCode = NULL ' consume the key
                     End If
                 End If
         End Select
-end sub
-
-    '******************************************************************************
-    '* Places, moves or refreshes a button on the screen.                         *
-    '*                                                                            *
-    '* x%  - x location of button.                                                *
-    '* y%  - y location of button.                                                *
-    '* bh% - Handle number of button to place.                                    *
-    '*                                                                            *
-    '* Note: The first time a handle is called the button will be placed on the   *
-    '*       screen. Subsequent calls to the same handle will move the button to  *
-    '*       a new location, restoring the background at the old position. If a   *
-    '*       handle is called at the same coordinates as a previous call, the     *
-    '*       button is simply refreshed on the screen.                            *
-    '******************************************************************************
-    Sub ButtonPut (x%, y%, bh As Long) '                                    Error Checking
-        Shared CommandButton() As CommandButtonType '                                       button defining array
-
-        If bh > UBound(CommandButton) Or bh < 1 Or Not CommandButton(bh).inUse Then
-            Error ERROR_INVALID_HANDLE
-        End If
-
-        If Not ((CommandButton(bh).x = x%) And (CommandButton(bh).y = y%)) Then '     button x,y change?
-            CommandButton(bh).x = x% '                                      save new x location
-            CommandButton(bh).y = y% '                                      save new y location
-        End If
-        If CommandButton(bh).visible Then '                                    is button on screen?
-            If CommandButton(bh).state Then '                               is button pressed?
-                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, FALSE ' draw button pressed
-                Color Black, Gray
-                PrintString (1 + x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, 1 + y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
-
-            Else '                                                button is not pressed
-                DrawBox3D x%, y%, x% + CommandButton(bh).w - 1, y% + CommandButton(bh).h - 1, TRUE ' draw button depressed
-                Color Black, Gray
-                PrintString (x% + CommandButton(bh).w \ 2 - PrintWidth(CommandButton(bh).text) \ 2, y% + CommandButton(bh).h \ 2 - FontHeight \ 2), CommandButton(bh).text
-            End If
-        End If
     End Sub
 
 
-
-    '******************************************************************************
-    '*                                                                            *
-    '* Updates the inputs on screen                                               *
-    '*                                                                            *
-    '******************************************************************************
-    Sub GLIUpdate
-        Shared TextBox() As TextBoxType
-        Shared TextBoxSettings As TextBoxSettingsType
+    ' Draws a push button widget
+    ' Again, colors are hardcoded here
+    ' The calling function must ensure that this is called only for active, visible, enabled and the correct widget class
+    Sub __PushButtonDraw (handle As Long)
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
         Shared InputManager As InputManagerType
+        Dim r As RectangleType, depressed As Byte, textColor As Unsigned Long
 
-        Dim Scan As Long ' used to scan input array
+        ' Create the bounding box for the widget
+        RectangleCreate Widget(handle).position, Widget(handle).size, r
 
-        If UBound(TextBox) = 0 Then Exit Sub ' leave if nothing is active
+        If Widget(handle).disabled Then ' Draw a widget with dull colors and disregard any user interaction
+            textColor = DarkGray
+            depressed = Widget(handle).cmd.depressed
+        Else
+            textColor = Black
 
-        If TextBoxSettings.current = 0 Then TextBoxSettings.current = 1 ' if this is first time set current input to 1
-
-        If TextBoxSettings.forced <> 0 Then ' being forced to an input field?
-            If TextBoxSettings.forced = -1 Then ' yes, to the next one?
-                Scan = TextBoxSettings.current ' set scanner to current input field
-                Do ' start scanning
-                    Scan = Scan + 1 ' move scanner to next handle number
-                    If Scan > UBound(TextBox) Then Scan = 1 ' return to start of input array if limit reached
-                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' set current input field if in use
-                Loop Until TextBoxSettings.current = Scan ' leave scanner when an input field in use is found
-                TextBoxSettings.forced = 0 ' reset force indicator
-            Else ' yes, to a specific input field
-                TextBoxSettings.current = TextBoxSettings.forced ' set the current input field
-                TextBoxSettings.forced = 0 ' reset force indicator
+            ' Flip depressed state if mouse was clicked and is being held inside the bounding box
+            If (InputManager.mouseLeftButton Or InputManager.mouseRightButton) And PointCollidesWithRectangle(InputManager.mousePosition, r) And (PointCollidesWithRectangle(InputManager.mouseLeftButtonClickedRectangle.a, r) Or PointCollidesWithRectangle(InputManager.mouseRightButtonClickedRectangle.a, r)) Then
+                depressed = Not Widget(handle).cmd.depressed
+            Else
+                depressed = Widget(handle).cmd.depressed
             End If
         End If
 
-        ' First process any pressed keys
-        Select Case InputManager.keyCode ' which key was hit?
-            Case 20992 ' INSERT key was pressed
-                TextBox(TextBoxSettings.current).insertMode = Not TextBox(TextBoxSettings.current).insertMode
-
-            Case 19712 ' RIGHT ARROW key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                If TextBox(TextBoxSettings.current).cursorPosition > Len(TextBox(TextBoxSettings.current).text) + 1 Then ' will this take the cursor too far?
-                    TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' yes, keep the cursor at the end of the line
-                End If
-
-                ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
-                If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                    TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
-                End If
-
-            Case 19200 ' LEFT ARROW key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
-                If TextBox(TextBoxSettings.current).cursorPosition < 1 Then ' did cursor go beyone beginning of line?
-                    TextBox(TextBoxSettings.current).cursorPosition = 1 ' yes, keep the cursor at the beginning of the line
-                End If
-
-                ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
-                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = 1
-                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
-                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
-                    End If
-                End If
-
-
-            Case 8 ' BACKSPACE key pressed
-                If TextBox(TextBoxSettings.current).cursorPosition > 1 Then ' is the cursor at the beginning of the line?
-                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 2) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' no, delete character
-                    TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition - 1 ' decrement the cursor position
-                End If
-
-                ' Box cursor movement
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox - 1
-                If TextBox(TextBoxSettings.current).cursorPosBox < 1 Then
-                    TextBox(TextBoxSettings.current).cursorPosBox = 1
-
-                    If TextBox(TextBoxSettings.current).startVisibleChar > 1 Then
-                        TextBox(TextBoxSettings.current).startVisibleChar = TextBox(TextBoxSettings.current).startVisibleChar - 1
-                    End If
-                End If
-
-            Case 18176 ' HOME key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = 1 ' move the cursor to the beginning of the line
-                TextBox(TextBoxSettings.current).cursorPosBox = 1
-                TextBox(TextBoxSettings.current).startVisibleChar = 1
-
-            Case 20224 ' END key was pressed
-                TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 ' move the cursor to the end of the line
-                TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
-
-            Case 21248 ' DELETE key was pressed
-                If TextBox(TextBoxSettings.current).cursorPosition < Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
-                    TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' no, delete character
-                End If
-
-            Case 9, 13, 20480 ' TAB, ENTER or DOWN ARROW key pressed
-                If InputManager.keyCode = 13 Then TextBox(TextBoxSettings.current).entered = TRUE ' if enter key was pressed remember it (TRUE)
-                Scan = TextBoxSettings.current ' set initital point of input array scan
-                Do ' begin scanning input array
-                    Scan = Scan + 1 ' increment the scanner
-                    If Scan > UBound(TextBox) Then Scan = 1 ' go to beginning of array if the end was reached
-                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
-                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
-
-            Case 18432 ' UP ARROW key was pressed
-                Scan = TextBoxSettings.current ' set initial point of input array scan
-                Do ' begin scanning input array
-                    Scan = Scan - 1 ' decrement the scanner
-                    If Scan = 0 Then Scan = UBound(TextBox) ' go the end of the array if the beginning was reached
-                    If TextBox(Scan).inUse Then TextBoxSettings.current = Scan ' if this field is in use then set it as the current input field
-                Loop Until TextBoxSettings.current = Scan ' keep scanning until a valid field is found
-
-            Case Else ' a character key was pressed
-                If InputManager.keyCode > 31 And InputManager.keyCode < 256 Then ' is it a valid ASCII displayable character?
-                    Dim K As String ' yes, initialize key holder variable
-                    Select Case InputManager.keyCode ' which alphanumeric key was pressed?
-                        Case 32 ' SPACE key was pressed
-                            K = Chr$(InputManager.keyCode) ' save the keystroke
-
-                        Case 40 To 41 ' PARENTHESIS key was pressed
-                            If (TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS) Or (TextBox(TextBoxSettings.current).allow And TEXT_BOX_PAREN) Then
-                                K = Chr$(InputManager.keyCode) ' if it's allowed then save the keystroke
-                            End If
-
-                        Case 45 ' DASH (minus -) key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_DASH Then ' are dashes allowed?
-                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
-                            End If
-
-                        Case 48 To 57 ' NUMBER key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_NUMERIC Then ' are numbers allowed?
-                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
-                            End If
-
-                        Case 33 To 47, 58 To 64, 91 To 96, 123 To 255 ' SYMBOL key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_SYMBOLS Then ' are symbols allowed?
-                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
-                            End If
-
-                        Case 65 To 90, 97 To 122 ' ALPHABETIC key was pressed
-                            If TextBox(TextBoxSettings.current).allow And TEXT_BOX_ALPHA Then ' are alpha keys allowed?
-                                K = Chr$(InputManager.keyCode) ' yes, save the keystroke
-                            End If
-                    End Select
-
-                    If K <> NULLSTRING Then ' was an allowed keystroke saved?
-                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_LOWER Then ' should it be forced to lower case?
-                            K = LCase$(K) ' yes, force the keystroke to lower case
-                        End If
-
-                        If TextBox(TextBoxSettings.current).allow And TEXT_BOX_UPPER Then ' should it be forced to upper case?
-                            K = UCase$(K) ' yes, force the keystroke to upper case
-                        End If
-
-                        If TextBox(TextBoxSettings.current).cursorPosition = Len(TextBox(TextBoxSettings.current).text) + 1 Then ' is the cursor at the end of the line?
-                            TextBox(TextBoxSettings.current).text = TextBox(TextBoxSettings.current).text + K ' yes, simply add the keystroke to input text
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                        ElseIf TextBox(TextBoxSettings.current).insertMode Then ' no, are we in INSERT mode?
-                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition + 1) ' yes, insert the character
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                        Else ' no, we are in OVERWRITE mode
-                            TextBox(TextBoxSettings.current).text = Left$(TextBox(TextBoxSettings.current).text, TextBox(TextBoxSettings.current).cursorPosition - 1) + K + Right$(TextBox(TextBoxSettings.current).text, Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).cursorPosition) ' overwrite with new character
-                            TextBox(TextBoxSettings.current).cursorPosition = TextBox(TextBoxSettings.current).cursorPosition + 1 ' increment the cursor position
-                        End If
-
-                        ' Box cursor movement
-                        TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).cursorPosBox + 1
-                        If TextBox(TextBoxSettings.current).cursorPosBox > TextBox(TextBoxSettings.current).visibleTextLen + 1 Then
-                            TextBox(TextBoxSettings.current).cursorPosBox = TextBox(TextBoxSettings.current).visibleTextLen + 1
-                            TextBox(TextBoxSettings.current).startVisibleChar = 1 + Len(TextBox(TextBoxSettings.current).text) - TextBox(TextBoxSettings.current).visibleTextLen
-                        End If
-                    End If
-                End If
-        End Select
-
-        Dim visibleText As String, currentTick As Integer64, charHeight As Long, curPosX As Long
-        Static cursorBlink As Byte, blinkTick As Integer64
-
-        charHeight = FontHeight
-
-        currentTick = GetTicks
-        If currentTick > blinkTick + 500 Then
-            blinkTick = currentTick
-            cursorBlink = Not cursorBlink
+        ' Draw now
+        WidgetDrawBox3D r, depressed
+        Color textColor, Gray ' disabled text color
+        If depressed Then
+            PrintString (1 + Widget(handle).position.x + Widget(handle).size.x \ 2 - PrintWidth(Widget(handle).text) \ 2, 1 + Widget(handle).position.y + Widget(handle).size.y \ 2 - FontHeight \ 2), Widget(handle).text
+        Else
+            PrintString (Widget(handle).position.x + Widget(handle).size.x \ 2 - PrintWidth(Widget(handle).text) \ 2, Widget(handle).position.y + Widget(handle).size.y \ 2 - FontHeight \ 2), Widget(handle).text
         End If
 
-        ' Now start the render loop
-        For Scan = 1 To UBound(TextBox)
-            ' Only render if the text box is active and visible
-            If TextBox(Scan).inUse And TextBox(Scan).visible Then
-                ' Draw the box first
-                DrawBox3D TextBox(Scan).x, TextBox(Scan).y, TextBox(Scan).x + TextBox(Scan).w - 1, TextBox(Scan).y + TextBox(Scan).h - 1, FALSE
-
-                ' Next figure out what part of the text we need to draw
-                visibleText = Mid$(TextBox(Scan).text, TextBox(Scan).startVisibleChar, TextBox(Scan).visibleTextLen)
-
-                ' Draw the text over the box
-                Color Black, Gray
-                If TextBox(TextBoxSettings.current).allow And TEXT_BOX_PASSWORD Then
-                    PrintString (2 + TextBox(Scan).x, 2 + TextBox(Scan).y), String$(TextBox(Scan).visibleTextLen, "*")
-                Else
-                    PrintString (2 + TextBox(Scan).x, 2 + TextBox(Scan).y), visibleText
-                End If
-
-                ' Draw the cursor
-                If cursorBlink Then
-                    curPosX = 2 + TextBox(Scan).x + (TextBox(Scan).cursorWidth * (TextBox(Scan).cursorPosBox - 1))
-                    If TextBox(Scan).insertMode Then
-                        Line (curPosX, 2 + TextBox(Scan).y + charHeight - 4)-(curPosX + TextBox(Scan).cursorWidth - 1, 2 + TextBox(Scan).y + charHeight - 1), Black, BF
-                    Else
-                        Line (curPosX, 2 + TextBox(Scan).y)-(curPosX + TextBox(Scan).cursorWidth - 1, 2 + TextBox(Scan).y + charHeight - 1), Black, BF
-                    End If
-                End If
-            End If
-        Next
+        ' Draw a decorated box inside the bounding box if the button is focused
+        If handle = WidgetManager.current And WidgetManager.focusBlink Then Line (r.a.x + 4, r.a.y + 4)-(r.b.x - 4, r.b.y - 4), Black, B , &B1100110011001100
     End Sub
 
-'-----------------------------------------------------------------------------------------------------
+
+    ' Draw a text box widget
+    ' Again, colors are hardcoded here
+    ' The calling function must ensure that this is called only for active, visible, enabled and the correct widget with focus
+    Sub __TextBoxDraw (handle As Long)
+        Shared Widget() As WidgetType
+        Shared WidgetManager As WidgetManagerType
+        Dim visibleText As String, r As RectangleType, textColor As Unsigned Long, textY As Long
+
+        RectangleCreate Widget(handle).position, Widget(handle).size, r ' create the bounding box for the widget
+
+        ' Draw a widget with dull colors if disabled
+        If Widget(handle).disabled Then
+            textColor = DarkGray
+        Else
+            textColor = Black
+        End If
+
+        ' Draw the depressed box first
+        WidgetDrawBox3D r, TRUE
+
+        ' Next figure out what part of the text we need to draw
+        visibleText = Mid$(Widget(handle).text, Widget(handle).txt.boxStartCharacter, Widget(handle).txt.boxTextLength)
+
+        ' Calculate the Y position of the text in the box
+        textY = 2 + Widget(handle).position.y + (Widget(handle).size.y - 4) \ 2 - FontHeight \ 2
+
+        ' Draw the text over the box
+        Color textColor, Gray
+        If Widget(handle).flags And TEXT_BOX_PASSWORD Then
+            PrintString (2 + Widget(handle).position.x, textY), String$(Widget(handle).txt.boxTextLength, Chr$(7))
+        Else
+            PrintString (2 + Widget(handle).position.x, textY), visibleText
+        End If
+
+        ' Draw the cursor only if below conditions are met
+        If handle = WidgetManager.current And WidgetManager.focusBlink And Not Widget(handle).disabled Then
+            Dim charHeight As Long, charWidth As Long, curPosX As Long
+
+            charHeight = FontHeight ' get the font height
+            charWidth = FontWidth
+            If charWidth = 0 Then charWidth = PrintWidth("X")
+
+            curPosX = 2 + Widget(handle).position.x + (charWidth * (Widget(handle).txt.boxPosition - 1))
+            If Widget(handle).txt.insertMode Then
+                Line (curPosX, textY + charHeight - 4)-(curPosX + charWidth - 1, textY + charHeight - 1), Black, BF
+            Else
+                Line (curPosX, textY)-(curPosX + charWidth - 1, textY + charHeight - 1), Black, BF
+            End If
+        End If
+    End Sub
+
+    '-----------------------------------------------------------------------------------------------------
 $End If
 '---------------------------------------------------------------------------------------------------------
