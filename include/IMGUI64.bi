@@ -120,6 +120,7 @@ $If IMGUI64_BI = UNDEFINED Then
         position As Vector2DType ' position of the widget on the screen
         size As Vector2DType ' size of the widget on the screen
         text As String ' text associated with the widget
+        changed As Byte ' true if the text was changed somehow
         clicked As Byte ' was the widget pressed / clicked?
         flags As Long ' widget flags
         ' Type of widget

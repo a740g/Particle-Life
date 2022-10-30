@@ -329,19 +329,20 @@ $If IMGUI64_BAS = UNDEFINED Then
         End If
 
         Widget(handle).text = text
+        Widget(handle).changed = TRUE
     End Sub
 
 
     ' Reports back if the ENTER key has been pressed on one or all input fileds
     ' handle values available to programmer:
-    '  0 = get the ENTER key status of all input fields in use (TRUE/FALSE)      *
-    ' >0 = get the ENTER key status on a certain input field (TRUE/FALSE)        *
+    '  0 = get the ENTER key status of all input fields in use (TRUE/FALSE)
+    ' >0 = get the ENTER key status on a certain input field (TRUE/FALSE)
     Function TextBoxEntered%% (handle As Long)
         Shared Widget() As WidgetType
 
         If UBound(Widget) = NULL Then Exit Function ' leave if nothing is active
 
-        If handle < 1 Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
+        If handle < NULL Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
             Error ERROR_INVALID_HANDLE
         End If
 
@@ -353,13 +354,27 @@ $If IMGUI64_BAS = UNDEFINED Then
             TextBoxEntered = TRUE '  assume all have had ENTER key pressed (TRUE)
 
             For h = 1 To UBound(Widget)
-                If Widget(h).inUse And Not Widget(h).txt.entered Then
+                If Widget(h).inUse And Widget(handle).class = WIDGET_TEXT_BOX And Not Widget(h).txt.entered Then
                     TextBoxEntered = FALSE
 
                     Exit Function
                 End If
             Next
         End If
+    End Function
+
+
+    ' Returns true if the text field of a text box has changed
+    Function TextBoxChanged%% (handle As Long)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = NULL Then Exit Function ' leave if nothing is active
+
+        If handle < 1 Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
+            Error ERROR_INVALID_HANDLE
+        End If
+
+        TextBoxChanged = Widget(handle).changed
     End Function
 
 
@@ -491,6 +506,20 @@ $If IMGUI64_BAS = UNDEFINED Then
 
         WidgetVisible = Widget(handle).visible
     End Function
+
+
+    ' Sets all active widget to visible or invisible
+    Sub WidgetVisibleAll (visible As Byte)
+        Shared Widget() As WidgetType
+
+        If UBound(Widget) = NULL Then Exit Sub ' leave if nothing is active
+
+        Dim h As Long
+
+        For h = 1 To UBound(Widget)
+            If Widget(h).inUse Then Widget(h).visible = visible
+        Next
+    End Sub
 
 
     ' Hides / shows a widget on screen
@@ -724,6 +753,8 @@ $If IMGUI64_BAS = UNDEFINED Then
         Shared WidgetManager As WidgetManagerType
         Shared InputManager As InputManagerType
 
+        Widget(WidgetManager.current).changed = FALSE ' Set this to false
+
         ' First process any pressed keys
         Select Case InputManager.keyCode ' which key was hit?
             Case KEY_INSERT
@@ -785,6 +816,7 @@ $If IMGUI64_BAS = UNDEFINED Then
                 End If
 
                 InputManager.keyCode = NULL ' consume the key
+                Widget(WidgetManager.current).changed = TRUE ' something changed
 
             Case KEY_HOME
                 Widget(WidgetManager.current).txt.textPosition = 1 ' move the cursor to the beginning of the line
@@ -816,9 +848,11 @@ $If IMGUI64_BAS = UNDEFINED Then
                 End If
 
                 InputManager.keyCode = NULL ' consume the key
+                Widget(WidgetManager.current).changed = TRUE ' something changed
 
             Case KEY_ENTER
                 Widget(WidgetManager.current).txt.entered = TRUE ' if enter key was pressed remember it (TRUE)
+                Widget(WidgetManager.current).changed = TRUE ' something changed
                 WidgetManager.forced = -1 ' Move to the next widget
 
                 InputManager.keyCode = NULL ' consume the key
@@ -890,6 +924,7 @@ $If IMGUI64_BAS = UNDEFINED Then
                         End If
 
                         InputManager.keyCode = NULL ' consume the key
+                        Widget(WidgetManager.current).changed = TRUE ' something changed
                     End If
                 End If
         End Select

@@ -13,13 +13,17 @@
 ' CONSTANTS
 '---------------------------------------------------------------------------------------------------------
 Const ATOMS_DEFAULT = 300 ' this is the default numbers of atoms we start in each group
+Const ATOMS_MAX = 999 ' maximum number of atoms in a group
 Const GROUPS_MAX = 7 ' maximum number of groups in the universe
 
+Const UI_FONT_HEIGHT = 16
+Const UI_FONT_WIDTH = 8
 Const UI_WIDGET_HEIGHT = 24 ' defaut widget height
-Const UI_WIDGET_SPACE = 4 ' space between widgets
-Const UI_PUSH_BUTTON_WIDTH_LARGE = 160
+Const UI_WIDGET_SPACE = 8 ' space between widgets
+Const UI_PUSH_BUTTON_WIDTH_LARGE = 120
 Const UI_PUSH_BUTTON_WIDTH_SMALL = 24
 Const UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMALL * 2) - (UI_WIDGET_SPACE * 2)
+Const UI_HEIGHT_CHARS = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ UI_FONT_HEIGHT
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -36,6 +40,7 @@ Type UniverseType
     size As Vector2DType ' this MUST be set by the user - typically window width & height
     groups As Unsigned Long ' managed by AddGroup() & RemoveGroup()
     atoms As Unsigned Long ' this MUST be set by the user - typically from the UI
+    atomSize As Unsigned Long ' this may be set by the user - typically from the UI
 End Type
 
 ' This defines the name and colors for all groups
@@ -49,7 +54,6 @@ Type GroupType
     clr As Unsigned Long ' managed by AddGroup()
     gravity As Single ' this MUST be set by the user - typically from the UI
     radius As Single ' this MUST be set by the user - typically from the UI
-    atomSize As Unsigned Long ' this may be set by the user - typically from the UI
 End Type
 
 ' This defines the atom
@@ -60,6 +64,8 @@ End Type
 
 Type UIType ' bunch of UI widgets to change stuff
     start As Vector2DType
+    hideLabels As Byte
+    changed As Byte
     cmdShow As Long ' hide / show UI
     cmdExit As Long ' exit button
     cmdShowFPS As Long ' hide / show FPS
@@ -84,13 +90,13 @@ Dim Shared UI As UIType ' user interface controls
 Dim Shared Universe As UniverseType ' Universe
 Dim Shared GroupTable(1 To GROUPS_MAX) As GroupNameType ' Group table
 ReDim Shared Group(1 To 1) As GroupType ' Group
-ReDim Shared Atom(1 To 1, 1 To 1) As AtomType ' Atom
+ReDim Shared Atom(1 To 1, 1 To 1) As AtomType ' Atom(group, atoms)
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-Screen _NewImage(DesktopWidth, DesktopHeight, 32)
+Screen NewImage(DesktopWidth, DesktopHeight, 32)
 FullScreen SquarePixels , Smooth
 PrintMode KeepBackground
 Randomize Timer
@@ -113,12 +119,17 @@ AddGroup
 Do
     RunUniverse ' make the universe go
 
-    Color White, Black ' This is required since the UI code can change the colors
+    Color White, Black ' this is required since the UI code can change the colors
     Cls ' clear the framebuffer
 
+    ' From here on everything is drawn in z order
     DrawUniverse ' draw the universe
-    If PushButtonDepressed(UI.cmdShowFPS) Then PrintString (0, 0), Str$(CalculateFPS) + " FPS @" + Str$(Universe.size.x) + " x" + Str$(Universe.size.y)
-    WidgetUpdate
+    DrawFPS ' draw the FPS
+    ToggleUIVisible ' show / hide the UI based on what the user wants
+    WidgetUpdate ' update the widget system
+    DrawLabels ' draw the static text labels
+    ValidateUI ' validate UI user values
+    AddRemoveGroupUI ' add / remove groups as needed
 
     Display ' flip the framebuffer
 
@@ -136,6 +147,8 @@ System
 ' This initializes all the static UI that will always be there
 ' Also call the dynamic UI function
 Sub InitializeUI
+    UI.changed = TRUE
+
     ' Calculate UI start left
     UI.start.x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE
     UI.start.y = UI_WIDGET_SPACE
@@ -163,25 +176,66 @@ Sub InitializeUI
     UI.cmdAtomSizeInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
 End Sub
 
-' This makes all available UI visible
-Sub ShowUI
+
+' This makes all available UI visible / invisivble (except the main button)
+Sub ToggleUIVisible
+    ' Check is the show button was pressed
+    If WidgetClicked(UI.cmdShow) Then
+        ' If so, then change the UI visibility based on the show button's state
+        WidgetVisibleAll PushButtonDepressed(UI.cmdShow)
+        UI.hideLabels = Not PushButtonDepressed(UI.cmdShow)
+        ' However, leave the show button to be always visible
+        WidgetVisible UI.cmdShow, TRUE
+    End If
 End Sub
 
-' This makes all available UI invisivble (except the main button)
-Sub HideUI
+
+' Add / remove UI for new groups
+Sub AddRemoveGroupUI
 End Sub
 
-' Add UI for new groups
-Sub AddGroupUI
-End Sub
 
-' Remove UI for deleted groups
-Sub RemoveGroupUI
-End Sub
-
-' Validate UI values
+' Validate UI values whenever something changes
 Sub ValidateUI
+    If UI.changed Then
+        Beep
+
+        UI.changed = FALSE
+    End If
+
+    ' Do this here so that any initial change requests can be caught
+    UI.changed = WidgetClicked(UI.cmdReset) Or WidgetClicked(UI.cmdRandom) Or WidgetClicked(UI.cmdColorsDec) Or WidgetClicked(UI.cmdColorsInc) Or WidgetClicked(UI.cmdAtomsDec) Or WidgetClicked(UI.cmdAtomsInc) Or WidgetClicked(UI.cmdAtomSizeDec) Or WidgetClicked(UI.cmdAtomSizeInc)
+    UI.changed = UI.changed Or TextBoxChanged(UI.txtColors) Or TextBoxChanged(UI.txtAtoms) Or TextBoxChanged(UI.txtAtomSize)
 End Sub
+
+Sub PrintRightAligned (text As String, cx As Integer, cy As Integer)
+    Locate cy, cx - Len(text)
+    Print text;
+End Sub
+
+' This draws the static texts next to the UI buttons to show what they do
+Sub DrawLabels
+    If Not UI.hideLabels Then
+        Dim cx As Integer
+
+        cx = UI.start.x \ UI_FONT_WIDTH
+
+        Color Gray
+
+        PrintRightAligned "Groups:", cx, UI_HEIGHT_CHARS * 6
+        PrintRightAligned "Atoms:", cx, UI_HEIGHT_CHARS * 7
+        PrintRightAligned "Size:", cx, UI_HEIGHT_CHARS * 8
+    End If
+End Sub
+
+' Draws the FPS on the top left corner of the screen if selected
+Sub DrawFPS
+    If PushButtonDepressed(UI.cmdShowFPS) Then
+        Color Yellow
+        PrintString (0, 0), Str$(CalculateFPS) + " FPS @" + Str$(Universe.size.x) + " x" + Str$(Universe.size.y)
+    End If
+End Sub
+
 
 ' Initializes the group name table along with the colors
 Sub InitializeGroupTable
@@ -233,7 +287,6 @@ Sub AddGroup
     ' Set some random values
     Group(Universe.groups).gravity = RandomBetween(-40, 40)
     Group(Universe.groups).radius = RandomBetween(20, 80)
-    Group(Universe.groups).atomSize = RandomBetween(0, 2)
 
     ' Initialize the added group
     InitializeGroup
@@ -308,7 +361,7 @@ Sub DrawUniverse
     For g = 1 To Universe.groups
         Color Group(g).clr
         For a = 1 To Universe.atoms
-            CircleFill Atom(g, a).position.x, Atom(g, a).position.y, Group(g).atomSize
+            CircleFill Atom(g, a).position.x, Atom(g, a).position.y, Universe.atomSize
         Next
     Next
 End Sub
