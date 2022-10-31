@@ -383,14 +383,6 @@ End Sub
 
 ' Updates and validate UI values whenever something changes
 Sub UpdateUI
-    $If VERSION < 3.4 Then
-            Const MB_ICONINFORMATION = 64
-
-            Declare CustomType Library
-            Function MessageBox~& (ByVal ignore As Long, sMessage As String, sTitle As String, Byval nType As Unsigned Long)
-            End Declare
-    $End If
-
     ' Check if user wants to change the size
     If WidgetClicked(UI.cmdParticleSizeDec) Then Universe.particleSize = Universe.particleSize - 1: UI.changed = TRUE
     If WidgetClicked(UI.cmdParticleSizeInc) Then Universe.particleSize = Universe.particleSize + 1: UI.changed = TRUE
@@ -429,10 +421,7 @@ Sub UpdateUI
 
     ' Check if the about button was clicked
     If WidgetClicked(UI.cmdAbout) Then
-        $If VERSION < 3.4 Then
-                Dim ignore As Unsigned Long
-                ignore = MessageBox(WindowHandle, APP_NAME + String$(2, KEY_ENTER) + "Copyright (c) 2022 Samuel Gomes" + String$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life" + Chr$(NULL), "About" + Chr$(NULL), MB_ICONINFORMATION)
-        $Else
+        $If VERSION > 3.3 Then
             MessageBox "About", APP_NAME + String$(2, KEY_ENTER) + "Copyright (c) 2022 Samuel Gomes" + String$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
         $End If
     End If

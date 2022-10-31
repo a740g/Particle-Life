@@ -12,3 +12,7 @@ This also includes an early version of an immediate mode GUI library based on id
 Icon by [Everaldo / Yellowicon](https://iconarchive.com/artist/everaldo.html)
 
 As usual, I do not accept responsibility for any effects, adverse or otherwise, that this code may have on you, your computer, your sanity, your dog, and anything else that you can think of. Use it at your own risk.
+
+## Important Note
+
+This uses new features introduced in [QB64-PE v3.4.0+](https://github.com/QB64-Phoenix-Edition/QB64pe/releases) and as such may not work correctly or reliably with older versions of QB64-PE or any version of QB64. Also, QB64 has issues when using `$Color:32` and `$NoPrefix` together. Sigh!
