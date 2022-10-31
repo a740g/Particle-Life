@@ -14,11 +14,15 @@
 '---------------------------------------------------------------------------------------------------------
 Const APP_NAME = "QB64-PE Particle Life"
 
-Const PARTICLES_DEFAULT = 140 ' this is the default numbers of particles we start in each group
+Const PARTICLES_DEFAULT = 200 ' this is the default numbers of particles we start in each group
 Const PARTICLES_MAX = 999 ' maximum number of particles in a group
-Const GROUPS_MAX = 4 ' maximum number of groups in the universe
+Const GROUPS_MAX = 3 ' maximum number of groups in the universe
 Const PARTICLE_SIZE_DEFAULT = 1 ' default radius of each particle
 Const PARTICLE_SIZE_MAX = 8 ' maximum size of each particle
+
+Const GROUP_RED = 1
+Const GROUP_GREEN = 2
+Const GROUP_BLUE = 3
 
 Const FRAME_RATE_MAX = 120
 
@@ -48,12 +52,18 @@ Type UniverseType
     particleSize As Unsigned Long ' this may be set by the user - typically from the UI
 End Type
 
+' This defines the rule type
+Type RuleType
+    attraction As Single
+    radius As Single
+End Type
+
 ' This defines the group
 Type GroupType
-    caption As String ' managed by InitializeGroupTable()
     clr As Unsigned Long ' managed by InitializeGroupTable()
-    gravity As Single ' this MUST be set by the user - typically from the UI
-    radius As Single ' this MUST be set by the user - typically from the UI
+    rule1 As RuleType ' self
+    rule2 As RuleType ' other
+    rule3 As RuleType ' other
 End Type
 
 ' This defines the particle
@@ -79,6 +89,69 @@ Type UIType ' bunch of UI widgets to change stuff
     cmdParticleSizeDec As Long
     txtParticleSize As Long
     cmdParticleSizeInc As Long
+    ' Various attraction & radius controls
+    cmdRR_ADec As Long
+    txtRR_A As Long
+    cmdRR_AInc As Long
+    cmdRR_RDec As Long
+    txtRR_R As Long
+    cmdRR_RInc As Long
+
+    cmdRG_ADec As Long
+    txtRG_A As Long
+    cmdRG_AInc As Long
+    cmdRG_RDec As Long
+    txtRG_R As Long
+    cmdRG_RInc As Long
+
+    cmdRB_ADec As Long
+    txtRB_A As Long
+    cmdRB_AInc As Long
+    cmdRB_RDec As Long
+    txtRB_R As Long
+    cmdRB_RInc As Long
+
+    cmdGR_ADec As Long
+    txtGR_A As Long
+    cmdGR_AInc As Long
+    cmdGR_RDec As Long
+    txtGR_R As Long
+    cmdGR_RInc As Long
+
+    cmdGG_ADec As Long
+    txtGG_A As Long
+    cmdGG_AInc As Long
+    cmdGG_RDec As Long
+    txtGG_R As Long
+    cmdGG_RInc As Long
+
+    cmdGB_ADec As Long
+    txtGB_A As Long
+    cmdGB_AInc As Long
+    cmdGB_RDec As Long
+    txtGB_R As Long
+    cmdGB_RInc As Long
+
+    cmdBR_ADec As Long
+    txtBR_A As Long
+    cmdBR_AInc As Long
+    cmdBR_RDec As Long
+    txtBR_R As Long
+    cmdBR_RInc As Long
+
+    cmdBG_ADec As Long
+    txtBG_A As Long
+    cmdBG_AInc As Long
+    cmdBG_RDec As Long
+    txtBG_R As Long
+    cmdBG_RInc As Long
+
+    cmdBB_ADec As Long
+    txtBB_A As Long
+    cmdBB_AInc As Long
+    cmdBB_RDec As Long
+    txtBB_R As Long
+    cmdBB_RInc As Long
 End Type
 '---------------------------------------------------------------------------------------------------------
 
@@ -88,13 +161,15 @@ End Type
 Dim Shared UI As UIType ' user interface controls
 Dim Shared Universe As UniverseType ' Universe
 Dim Shared Group(1 To GROUPS_MAX) As GroupType ' Group
-ReDim Shared Particle(1 To 1, 1 To 1) As ParticleType ' Particle(group, particles)
+ReDim Shared GroupRed(1 To 1) As ParticleType ' Red particles
+ReDim Shared GroupGreen(1 To 1) As ParticleType ' Green particles
+ReDim Shared GroupBlue(1 To 1) As ParticleType ' Blue particles
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-Dim r As Long
+Dim r As Unsigned Long
 r = Clamp(Val(Command$), 1, 8) ' Check the user wants to use a lower resolution
 Screen NewImage(DesktopWidth \ r, DesktopHeight \ r, 32)
 FullScreen SquarePixels , Smooth
@@ -115,7 +190,7 @@ InitializeUI ' initialize the UI
 Do
     RunUniverse ' make the universe go
 
-    Color White, Black ' this is required since the UI code can change the colors
+    Color White, &HFF0F0F0F~& ' this is required since the UI code can change the colors
     Cls ' clear the framebuffer
 
     ' From here on everything is drawn in z order
@@ -152,7 +227,7 @@ Sub InitializeUI
     UI.cmdExit = PushButtonNew("Exit", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
     UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdAbout = PushButtonNew("About...", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
-UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdShowFPS = PushButtonNew("Show FPS", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
     UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdRandom = PushButtonNew("Random", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
@@ -164,6 +239,16 @@ UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdParticleSizeDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
     UI.txtParticleSize = TextBoxNew(Str$(Universe.particleSize), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
     UI.cmdParticleSizeInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRR_ADec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRR_A = TextBoxNew(Str$(Group(GROUP_RED).rule1.attraction), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRR_AInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+
+    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRR_RDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRR_R = TextBoxNew(Str$(Group(GROUP_RED).rule1.radius), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRR_RInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
 End Sub
 
 
@@ -213,7 +298,7 @@ Sub UpdateUI
 End Sub
 
 
-Sub PrintRightAligned (text As String, cx As Integer, cy As Integer)
+Sub PrintRightAligned (text As String, cx As Long, cy As Long)
     Locate cy, cx - Len(text)
     Print text;
 End Sub
@@ -222,7 +307,7 @@ End Sub
 ' This draws the static texts next to the UI buttons to show what they do
 Sub DrawLabels
     If Not UI.hideLabels Then
-        Dim cx As Integer
+        Dim cx As Long
 
         cx = UI.start.x \ UI_FONT_WIDTH
 
@@ -245,94 +330,130 @@ End Sub
 
 ' Initializes all groups
 Sub InitializeGroups
-    Group(1).caption = "Red"
-    Group(1).clr = NP_Red
-    Group(1).gravity = RandomBetween(-80, 80)
-    Group(1).radius = RandomBetween(10, 80)
+    Group(GROUP_RED).clr = NP_Red
+    Group(GROUP_RED).rule1.attraction = RandomBetween(-100, 100)
+    Group(GROUP_RED).rule1.radius = RandomBetween(10, 200)
+    Group(GROUP_RED).rule2.attraction = RandomBetween(-100, 100)
+    Group(GROUP_RED).rule2.radius = RandomBetween(10, 200)
+    Group(GROUP_RED).rule3.attraction = RandomBetween(-100, 100)
+    Group(GROUP_RED).rule3.radius = RandomBetween(10, 200)
 
-    Group(2).caption = "Green"
-    Group(2).clr = NP_Green
-    Group(2).gravity = RandomBetween(-80, 80)
-    Group(2).radius = RandomBetween(10, 80)
+    Group(GROUP_GREEN).clr = NP_Green
+    Group(GROUP_GREEN).rule1.attraction = RandomBetween(-100, 100)
+    Group(GROUP_GREEN).rule1.radius = RandomBetween(10, 200)
+    Group(GROUP_GREEN).rule2.attraction = RandomBetween(-100, 100)
+    Group(GROUP_GREEN).rule2.radius = RandomBetween(10, 200)
+    Group(GROUP_GREEN).rule3.attraction = RandomBetween(-100, 100)
+    Group(GROUP_GREEN).rule3.radius = RandomBetween(10, 200)
 
-    Group(3).caption = "Blue"
-    Group(3).clr = NP_Blue
-    Group(3).gravity = RandomBetween(-80, 80)
-    Group(3).radius = RandomBetween(10, 80)
-
-    Group(4).caption = "White"
-    Group(4).clr = White
-    Group(4).gravity = RandomBetween(-80, 80)
-    Group(4).radius = RandomBetween(10, 80)
+    Group(GROUP_BLUE).clr = NP_Blue
+    Group(GROUP_BLUE).rule1.attraction = RandomBetween(-100, 100)
+    Group(GROUP_BLUE).rule1.radius = RandomBetween(10, 200)
+    Group(GROUP_BLUE).rule2.attraction = RandomBetween(-100, 100)
+    Group(GROUP_BLUE).rule2.radius = RandomBetween(10, 200)
+    Group(GROUP_BLUE).rule3.attraction = RandomBetween(-100, 100)
+    Group(GROUP_BLUE).rule3.radius = RandomBetween(10, 200)
 End Sub
 
 
 ' Initializes all particles in the universe
 Sub InitializeParticles
-    ReDim Particle(1 To GROUPS_MAX, 1 To Universe.particles) As ParticleType
+    Dim As Unsigned Long i
 
-    Dim As Unsigned Long g, a
-    For g = 1 To GROUPS_MAX
-        For a = 1 To Universe.particles
-            Particle(g, a).position.x = RandomBetween(50, Universe.size.x - 51)
-            Particle(g, a).position.y = RandomBetween(50, Universe.size.y - 51)
+    ReDim GroupRed(1 To Universe.particles) As ParticleType
+    ReDim GroupGreen(1 To Universe.particles) As ParticleType
+    ReDim GroupBlue(1 To Universe.particles) As ParticleType
+
+    For i = 1 To Universe.particles
+        GroupRed(i).position.x = RandomBetween(50, Universe.size.x - 51)
+        GroupRed(i).position.y = RandomBetween(50, Universe.size.y - 51)
+    Next
+
+    For i = 1 To Universe.particles
+        GroupGreen(i).position.x = RandomBetween(50, Universe.size.x - 51)
+        GroupGreen(i).position.y = RandomBetween(50, Universe.size.y - 51)
+    Next
+
+    For i = 1 To Universe.particles
+        GroupBlue(i).position.x = RandomBetween(50, Universe.size.x - 51)
+        GroupBlue(i).position.y = RandomBetween(50, Universe.size.y - 51)
+    Next
+End Sub
+
+
+' Interaction between 2 particle groups
+' Grp1 is the group that will be modified by the interaction
+' Grp2 is the interacting group (its value won't be modified)
+Sub ApplyRule (grp1() As ParticleType, grp2() As ParticleType, rule As RuleType)
+    Dim As Single g, dx, dy, r, fx, fy, f
+    Dim As Unsigned Long i, j
+
+    g = rule.attraction / -100
+
+    For i = 1 To Universe.particles
+        fx = 0
+        fy = 0
+        For j = 1 To Universe.particles
+            ' Calculate the distance between points using Pythagorean theorem
+            dx = grp1(i).position.x - grp2(j).position.x
+            dy = grp1(i).position.y - grp2(j).position.y
+            r = Sqr(dx * dx + dy * dy)
+
+            ' Calculate the force in given bounds
+            If r > 0 And r < rule.radius Then
+                f = g / r
+                fx = fx + dx * f
+                fy = fy + dy * f
+            End If
         Next
+
+        ' Calculate new velocity
+        grp1(i).velocity.x = (grp1(i).velocity.x + fx) * 0.5
+        grp1(i).velocity.y = (grp1(i).velocity.y + fy) * 0.5
+
+        ' Update position based on velocity
+        grp1(i).position.x = grp1(i).position.x + grp1(i).velocity.x
+        grp1(i).position.y = grp1(i).position.y + grp1(i).velocity.y
+
+        ' Check for screen bounds
+        If grp1(i).position.x < 0 Or grp1(i).position.x >= Universe.size.x Then grp1(i).velocity.x = grp1(i).velocity.x * -1
+        If grp1(i).position.y < 0 Or grp1(i).position.y >= Universe.size.y Then grp1(i).velocity.y = grp1(i).velocity.y * -1
     Next
 End Sub
 
 
 ' This will make everything go
 Sub RunUniverse
-    Dim As Single g, dx, dy, r, fx, fy, f
-    Dim As Unsigned Long a1, a2, g1, g2
+    ApplyRule GroupRed(), GroupRed(), Group(GROUP_RED).rule1
+    ApplyRule GroupRed(), GroupGreen(), Group(GROUP_RED).rule2
+    ApplyRule GroupRed(), GroupBlue(), Group(GROUP_RED).rule3
 
-    For g2 = 1 To GROUPS_MAX
-        For g1 = 1 To GROUPS_MAX
-            g = Group(g1).gravity / -100
+    ApplyRule GroupGreen(), GroupGreen(), Group(GROUP_GREEN).rule1
+    ApplyRule GroupGreen(), GroupRed(), Group(GROUP_GREEN).rule2
+    ApplyRule GroupGreen(), GroupBlue(), Group(GROUP_GREEN).rule3
 
-            For a1 = 1 To Universe.particles
-                fx = 0
-                fy = 0
-                For a2 = 1 To Universe.particles
-                    ' Calculate the distance between points using Pythagorean theorem
-                    dx = Particle(g1, a1).position.x - Particle(g2, a2).position.x
-                    dy = Particle(g1, a1).position.y - Particle(g2, a2).position.y
-                    r = Sqr(dx * dx + dy * dy)
+    ApplyRule GroupBlue(), GroupBlue(), Group(GROUP_BLUE).rule1
+    ApplyRule GroupBlue(), GroupRed(), Group(GROUP_BLUE).rule2
+    ApplyRule GroupBlue(), GroupGreen(), Group(GROUP_BLUE).rule3
+End Sub
 
-                    ' Calculate the force in given bounds
-                    If r > 0 And r < Group(g1).radius Then
-                        f = g / r
-                        fx = fx + dx * f
-                        fy = fy + dy * f
-                    End If
-                Next
 
-                ' Calculate new velocity
-                Particle(g1, a1).velocity.x = (Particle(g1, a1).velocity.x + fx) * 0.5
-                Particle(g1, a1).velocity.y = (Particle(g1, a1).velocity.y + fy) * 0.5
+' Draws all particles in a group
+Sub DrawGroup (grp() As ParticleType, gId As Unsigned Long)
+    Dim As Unsigned Long i
 
-                ' Update position based on velocity
-                Particle(g1, a1).position.x = Particle(g1, a1).position.x + Particle(g1, a1).velocity.x
-                Particle(g1, a1).position.y = Particle(g1, a1).position.y + Particle(g1, a1).velocity.y
-
-                ' Checking for screen bounds
-                If Particle(g1, a1).position.x < 0 Or Particle(g1, a1).position.x >= Universe.size.x Then Particle(g1, a1).velocity.x = Particle(g1, a1).velocity.x * -1
-                If Particle(g1, a1).position.y < 0 Or Particle(g1, a1).position.y >= Universe.size.y Then Particle(g1, a1).velocity.y = Particle(g1, a1).velocity.y * -1
-            Next
-        Next
+    Color Group(gId).clr
+    For i = 1 To Universe.particles
+        CircleFill grp(i).position.x, grp(i).position.y, Universe.particleSize
     Next
 End Sub
 
 
 ' Draws all particles in the universe
 Sub DrawUniverse
-    Dim As Unsigned Long g, a
-    For g = 1 To GROUPS_MAX
-        Color Group(g).clr
-        For a = 1 To Universe.particles
-            CircleFill Particle(g, a).position.x, Particle(g, a).position.y, Universe.particleSize
-        Next
-    Next
+    DrawGroup GroupRed(), GROUP_RED
+    DrawGroup GroupGreen(), GROUP_GREEN
+    DrawGroup GroupBlue(), GROUP_BLUE
 End Sub
 
 
