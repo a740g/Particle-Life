@@ -333,34 +333,17 @@ $If IMGUI64_BAS = UNDEFINED Then
     End Sub
 
 
-    ' Reports back if the ENTER key has been pressed on one or all input fileds
-    ' handle values available to programmer:
-    '  0 = get the ENTER key status of all input fields in use (TRUE/FALSE)
-    ' >0 = get the ENTER key status on a certain input field (TRUE/FALSE)
+    ' Reports true if the ENTER key has been pressed on the input box
     Function TextBoxEntered%% (handle As Long)
         Shared Widget() As WidgetType
 
         If UBound(Widget) = NULL Then Exit Function ' leave if nothing is active
 
-        If handle < NULL Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
+        If handle < 1 Or handle > UBound(Widget) Or Widget(handle).class <> WIDGET_TEXT_BOX Then ' is handle valid?
             Error ERROR_INVALID_HANDLE
         End If
 
-        If handle > NULL Then
-            TextBoxEntered = Widget(handle).txt.entered
-        Else
-            Dim h As Long
-
-            TextBoxEntered = TRUE '  assume all have had ENTER key pressed (TRUE)
-
-            For h = 1 To UBound(Widget)
-                If Widget(h).inUse And Widget(handle).class = WIDGET_TEXT_BOX And Not Widget(h).txt.entered Then
-                    TextBoxEntered = FALSE
-
-                    Exit Function
-                End If
-            Next
-        End If
+        TextBoxEntered = Widget(handle).txt.entered
     End Function
 
 
@@ -754,6 +737,7 @@ $If IMGUI64_BAS = UNDEFINED Then
         Shared InputManager As InputManagerType
 
         Widget(WidgetManager.current).changed = FALSE ' Set this to false
+        Widget(WidgetManager.current).txt.entered = FALSE ' Set this to false too
 
         ' First process any pressed keys
         Select Case InputManager.keyCode ' which key was hit?
