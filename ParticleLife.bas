@@ -10,6 +10,77 @@
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
+' METACOMMANDS
+'---------------------------------------------------------------------------------------------------------
+$ExeIcon:'./ParticleLife.ico'
+$VersionInfo:ProductName='Particle Life'
+$VersionInfo:CompanyName='Samuel Gomes'
+$VersionInfo:LegalCopyright='Copyright (c) 2022 Samuel Gomes'
+$VersionInfo:LegalTrademarks='All trademarks are property of their respective owners'
+$VersionInfo:Web='https://github.com/a740g'
+$VersionInfo:Comments='https://github.com/a740g'
+$VersionInfo:InternalName='ParticleLife'
+$VersionInfo:OriginalFilename='ParticleLife.exe'
+$VersionInfo:FileDescription='Particle Life executable'
+$VersionInfo:FILEVERSION#=1,0,0,0
+$VersionInfo:PRODUCTVERSION#=1,0,0,0
+'---------------------------------------------------------------------------------------------------------
+
+'---------------------------------------------------------------------------------------------------------
+' UI AUTO-GENERATION CODE (https://www.onlinegdb.com/online_c++_compiler)
+'---------------------------------------------------------------------------------------------------------
+'#include <iostream>
+
+'int main()
+'{
+'    struct group {
+'        char* name;
+'        char in;
+'        int id;
+'    } grp[3] = {{"Red", 'R', 1}, {"Green", 'G', 2}, {"Blue", 'B', 3}};
+
+'    for (int i = 0; i < 3; i++) {
+'        for (int j = 0; j < 3; j++) {
+'            //printf("cmd%c%c_ADec As Long\n", grp[i].in, grp[j].in);
+'            //printf("txt%c%c_A As Long\n", grp[i].in, grp[j].in);
+'            //printf("cmd%c%c_AInc As Long\n", grp[i].in, grp[j].in);
+'            //printf("cmd%c%c_RDec As Long\n", grp[i].in, grp[j].in);
+'            //printf("txt%c%c_R As Long\n", grp[i].in, grp[j].in);
+'            //printf("cmd%c%c_RInc As Long\n", grp[i].in, grp[j].in);
+
+'            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
+'            //printf("UI.cmd%c%c_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)\n", grp[i].in, grp[j].in);
+'            //printf("UI.txt%c%c_A = TextBoxNew(Str$(Group(GROUP_%s).rule%i.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
+'            //printf("UI.cmd%c%c_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)\n", grp[i].in, grp[j].in);
+'            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
+'            //printf("UI.cmd%c%c_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)\n", grp[i].in, grp[j].in);
+'            //printf("UI.txt%c%c_R = TextBoxNew(Str$(Group(GROUP_%s).rule%i.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
+'            //printf("UI.cmd%c%c_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)\n", grp[i].in, grp[j].in);
+
+'            //printf("If WidgetClicked(UI.cmd%c%c_ADec) Then WidgetText UI.txt%c%c_A, Str$(Val(WidgetText$(UI.txt%c%c_A)) - 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
+'            //printf("If WidgetClicked(UI.cmd%c%c_AInc) Then WidgetText UI.txt%c%c_A, Str$(Val(WidgetText$(UI.txt%c%c_A)) + 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
+'            //printf("If TextBoxEntered(UI.txt%c%c_A) Then UI.changed = TRUE\n", grp[i].in, grp[j].in);
+'            //printf("If WidgetClicked(UI.cmd%c%c_RDec) Then WidgetText UI.txt%c%c_R, Str$(Val(WidgetText$(UI.txt%c%c_R)) - 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
+'            //printf("If WidgetClicked(UI.cmd%c%c_RInc) Then WidgetText UI.txt%c%c_R, Str$(Val(WidgetText$(UI.txt%c%c_R)) + 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
+'            //printf("If TextBoxEntered(UI.txt%c%c_R) Then UI.changed = TRUE\n", grp[i].in, grp[j].in);
+
+'            //printf("Group(GROUP_%s).rule%i.attraction = Clamp(Val(WidgetText(UI.txt%c%c_A)), ATTRACTION_MIN, ATTRACTION_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("WidgetText UI.txt%c%c_A, Str$(Group(GROUP_%s).rule%i.attraction)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
+'            //printf("Group(GROUP_%s).rule%i.radius = Clamp(Val(WidgetText(UI.txt%c%c_R)), RADIUS_MIN, RADIUS_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("WidgetText UI.txt%c%c_R, Str$(Group(GROUP_%s).rule%i.radius)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
+
+'            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
+'            //printf("DrawStringRightAligned \"Attract %c <-> %c:\", x, y\n", grp[i].in, grp[j].in);
+'            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
+'            //printf("DrawStringRightAligned \"Radius %c <-> %c:\", x, y\n", grp[i].in, grp[j].in);
+'        }
+'    }
+
+'    return 0;
+'}
+'---------------------------------------------------------------------------------------------------------
+
+'---------------------------------------------------------------------------------------------------------
 ' CONSTANTS
 '---------------------------------------------------------------------------------------------------------
 Const APP_NAME = "QB64-PE Particle Life"
@@ -24,16 +95,18 @@ Const GROUP_RED = 1
 Const GROUP_GREEN = 2
 Const GROUP_BLUE = 3
 
+Const ATTRACTION_MIN = -100
+Const ATTRACTION_MAX = 100
+Const RADIUS_MIN = 0
+Const RADIUS_MAX = 200
+
 Const FRAME_RATE_MAX = 120
 
-Const UI_FONT_HEIGHT = 16
-Const UI_FONT_WIDTH = 8
 Const UI_WIDGET_HEIGHT = 24 ' defaut widget height
-Const UI_WIDGET_SPACE = 8 ' space between widgets
+Const UI_WIDGET_SPACE = 2 ' space between widgets
 Const UI_PUSH_BUTTON_WIDTH_LARGE = 120
 Const UI_PUSH_BUTTON_WIDTH_SMALL = 24
 Const UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMALL * 2) - (UI_WIDGET_SPACE * 2)
-Const UI_HEIGHT_CHARS = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ UI_FONT_HEIGHT
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -54,8 +127,8 @@ End Type
 
 ' This defines the rule type
 Type RuleType
-    attraction As Single
-    radius As Single
+    attraction As Long
+    radius As Long
 End Type
 
 ' This defines the group
@@ -73,7 +146,6 @@ Type ParticleType
 End Type
 
 Type UIType ' bunch of UI widgets to change stuff
-    start As Vector2DType
     hideLabels As Byte ' should lables be hidden?
     changed As Byte ' did anything significant in the UI change
     cmdShow As Long ' hide / show UI
@@ -89,63 +161,55 @@ Type UIType ' bunch of UI widgets to change stuff
     cmdParticleSizeDec As Long
     txtParticleSize As Long
     cmdParticleSizeInc As Long
-    ' Various attraction & radius controls
+    ' Various attraction & radius controls (auto-generated)
     cmdRR_ADec As Long
     txtRR_A As Long
     cmdRR_AInc As Long
     cmdRR_RDec As Long
     txtRR_R As Long
     cmdRR_RInc As Long
-
     cmdRG_ADec As Long
     txtRG_A As Long
     cmdRG_AInc As Long
     cmdRG_RDec As Long
     txtRG_R As Long
     cmdRG_RInc As Long
-
     cmdRB_ADec As Long
     txtRB_A As Long
     cmdRB_AInc As Long
     cmdRB_RDec As Long
     txtRB_R As Long
     cmdRB_RInc As Long
-
     cmdGR_ADec As Long
     txtGR_A As Long
     cmdGR_AInc As Long
     cmdGR_RDec As Long
     txtGR_R As Long
     cmdGR_RInc As Long
-
     cmdGG_ADec As Long
     txtGG_A As Long
     cmdGG_AInc As Long
     cmdGG_RDec As Long
     txtGG_R As Long
     cmdGG_RInc As Long
-
     cmdGB_ADec As Long
     txtGB_A As Long
     cmdGB_AInc As Long
     cmdGB_RDec As Long
     txtGB_R As Long
     cmdGB_RInc As Long
-
     cmdBR_ADec As Long
     txtBR_A As Long
     cmdBR_AInc As Long
     cmdBR_RDec As Long
     txtBR_R As Long
     cmdBR_RInc As Long
-
     cmdBG_ADec As Long
     txtBG_A As Long
     cmdBG_AInc As Long
     cmdBG_RDec As Long
     txtBG_R As Long
     cmdBG_RInc As Long
-
     cmdBB_ADec As Long
     txtBB_A As Long
     cmdBB_AInc As Long
@@ -218,37 +282,102 @@ System
 Sub InitializeUI
     UI.changed = TRUE
 
+    Dim As Long x, y
+
     ' Calculate UI start left
-    UI.start.x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE
-    UI.start.y = UI_WIDGET_SPACE
-    UI.cmdShow = PushButtonNew("Show Controls", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
+    x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE
+    y = UI_WIDGET_SPACE
+    UI.cmdShow = PushButtonNew("Show Controls", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
     PushButtonDepressed UI.cmdShow, TRUE
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdExit = PushButtonNew("Exit", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdAbout = PushButtonNew("About...", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdShowFPS = PushButtonNew("Show FPS", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdRandom = PushButtonNew("Random", UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdParticlesDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.txtParticles = TextBoxNew(Str$(Universe.particles), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
-    UI.cmdParticlesInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdParticleSizeDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.txtParticleSize = TextBoxNew(Str$(Universe.particleSize), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
-    UI.cmdParticleSizeInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdRR_ADec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.txtRR_A = TextBoxNew(Str$(Group(GROUP_RED).rule1.attraction), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
-    UI.cmdRR_AInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-
-    UI.start.y = UI.start.y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-    UI.cmdRR_RDec = PushButtonNew(Chr$(17), UI.start.x, UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.txtRR_R = TextBoxNew(Str$(Group(GROUP_RED).rule1.radius), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, UI.start.y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
-    UI.cmdRR_RInc = PushButtonNew(Chr$(16), UI.start.x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), UI.start.y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdExit = PushButtonNew("Exit", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdAbout = PushButtonNew("About...", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdShowFPS = PushButtonNew("Show FPS", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRandom = PushButtonNew("Random", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdParticlesDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtParticles = TextBoxNew(Str$(Universe.particles), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdParticlesInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdParticleSizeDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtParticleSize = TextBoxNew(Str$(Universe.particleSize), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdParticleSizeInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    ' Auto-generated stuff
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRR_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRR_A = TextBoxNew(Str$(Group(GROUP_RED).rule1.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRR_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRR_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRR_R = TextBoxNew(Str$(Group(GROUP_RED).rule1.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRR_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRG_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRG_A = TextBoxNew(Str$(Group(GROUP_RED).rule2.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRG_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRG_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRG_R = TextBoxNew(Str$(Group(GROUP_RED).rule2.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRG_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRB_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRB_A = TextBoxNew(Str$(Group(GROUP_RED).rule3.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRB_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdRB_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtRB_R = TextBoxNew(Str$(Group(GROUP_RED).rule3.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdRB_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGR_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGR_A = TextBoxNew(Str$(Group(GROUP_GREEN).rule1.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGR_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGR_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGR_R = TextBoxNew(Str$(Group(GROUP_GREEN).rule1.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGR_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGG_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGG_A = TextBoxNew(Str$(Group(GROUP_GREEN).rule2.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGG_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGG_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGG_R = TextBoxNew(Str$(Group(GROUP_GREEN).rule2.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGG_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGB_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGB_A = TextBoxNew(Str$(Group(GROUP_GREEN).rule3.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGB_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdGB_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtGB_R = TextBoxNew(Str$(Group(GROUP_GREEN).rule3.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdGB_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBR_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBR_A = TextBoxNew(Str$(Group(GROUP_BLUE).rule1.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBR_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBR_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBR_R = TextBoxNew(Str$(Group(GROUP_BLUE).rule1.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBR_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBG_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBG_A = TextBoxNew(Str$(Group(GROUP_BLUE).rule2.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBG_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBG_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBG_R = TextBoxNew(Str$(Group(GROUP_BLUE).rule2.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBG_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBB_ADec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBB_A = TextBoxNew(Str$(Group(GROUP_BLUE).rule3.attraction), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBB_AInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdBB_RDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
+    UI.txtBB_R = TextBoxNew(Str$(Group(GROUP_BLUE).rule3.radius), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.cmdBB_RInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
 End Sub
 
 
@@ -268,6 +397,26 @@ Sub UpdateUI
     If WidgetClicked(UI.cmdRandom) Then
         InitializeGroups
         InitializeParticles
+
+        ' Auto-generated
+        WidgetText UI.txtRR_A, Str$(Group(GROUP_RED).rule1.attraction)
+        WidgetText UI.txtRR_R, Str$(Group(GROUP_RED).rule1.radius)
+        WidgetText UI.txtRG_A, Str$(Group(GROUP_RED).rule2.attraction)
+        WidgetText UI.txtRG_R, Str$(Group(GROUP_RED).rule2.radius)
+        WidgetText UI.txtRB_A, Str$(Group(GROUP_RED).rule3.attraction)
+        WidgetText UI.txtRB_R, Str$(Group(GROUP_RED).rule3.radius)
+        WidgetText UI.txtGR_A, Str$(Group(GROUP_GREEN).rule1.attraction)
+        WidgetText UI.txtGR_R, Str$(Group(GROUP_GREEN).rule1.radius)
+        WidgetText UI.txtGG_A, Str$(Group(GROUP_GREEN).rule2.attraction)
+        WidgetText UI.txtGG_R, Str$(Group(GROUP_GREEN).rule2.radius)
+        WidgetText UI.txtGB_A, Str$(Group(GROUP_GREEN).rule3.attraction)
+        WidgetText UI.txtGB_R, Str$(Group(GROUP_GREEN).rule3.radius)
+        WidgetText UI.txtBR_A, Str$(Group(GROUP_BLUE).rule1.attraction)
+        WidgetText UI.txtBR_R, Str$(Group(GROUP_BLUE).rule1.radius)
+        WidgetText UI.txtBG_A, Str$(Group(GROUP_BLUE).rule2.attraction)
+        WidgetText UI.txtBG_R, Str$(Group(GROUP_BLUE).rule2.radius)
+        WidgetText UI.txtBB_A, Str$(Group(GROUP_BLUE).rule3.attraction)
+        WidgetText UI.txtBB_R, Str$(Group(GROUP_BLUE).rule3.radius)
     End If
 
     ' Check if the about button was clicked
@@ -284,37 +433,170 @@ Sub UpdateUI
         WidgetVisible UI.cmdShow, TRUE
     End If
 
+    ' Check if any rule values have changed (auto-generated)
+    If WidgetClicked(UI.cmdRR_ADec) Then WidgetText UI.txtRR_A, Str$(Val(WidgetText$(UI.txtRR_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRR_AInc) Then WidgetText UI.txtRR_A, Str$(Val(WidgetText$(UI.txtRR_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRR_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdRR_RDec) Then WidgetText UI.txtRR_R, Str$(Val(WidgetText$(UI.txtRR_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRR_RInc) Then WidgetText UI.txtRR_R, Str$(Val(WidgetText$(UI.txtRR_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRR_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdRG_ADec) Then WidgetText UI.txtRG_A, Str$(Val(WidgetText$(UI.txtRG_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRG_AInc) Then WidgetText UI.txtRG_A, Str$(Val(WidgetText$(UI.txtRG_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRG_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdRG_RDec) Then WidgetText UI.txtRG_R, Str$(Val(WidgetText$(UI.txtRG_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRG_RInc) Then WidgetText UI.txtRG_R, Str$(Val(WidgetText$(UI.txtRG_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRG_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdRB_ADec) Then WidgetText UI.txtRB_A, Str$(Val(WidgetText$(UI.txtRB_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRB_AInc) Then WidgetText UI.txtRB_A, Str$(Val(WidgetText$(UI.txtRB_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRB_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdRB_RDec) Then WidgetText UI.txtRB_R, Str$(Val(WidgetText$(UI.txtRB_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdRB_RInc) Then WidgetText UI.txtRB_R, Str$(Val(WidgetText$(UI.txtRB_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtRB_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGR_ADec) Then WidgetText UI.txtGR_A, Str$(Val(WidgetText$(UI.txtGR_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGR_AInc) Then WidgetText UI.txtGR_A, Str$(Val(WidgetText$(UI.txtGR_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGR_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGR_RDec) Then WidgetText UI.txtGR_R, Str$(Val(WidgetText$(UI.txtGR_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGR_RInc) Then WidgetText UI.txtGR_R, Str$(Val(WidgetText$(UI.txtGR_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGR_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGG_ADec) Then WidgetText UI.txtGG_A, Str$(Val(WidgetText$(UI.txtGG_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGG_AInc) Then WidgetText UI.txtGG_A, Str$(Val(WidgetText$(UI.txtGG_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGG_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGG_RDec) Then WidgetText UI.txtGG_R, Str$(Val(WidgetText$(UI.txtGG_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGG_RInc) Then WidgetText UI.txtGG_R, Str$(Val(WidgetText$(UI.txtGG_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGG_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGB_ADec) Then WidgetText UI.txtGB_A, Str$(Val(WidgetText$(UI.txtGB_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGB_AInc) Then WidgetText UI.txtGB_A, Str$(Val(WidgetText$(UI.txtGB_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGB_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdGB_RDec) Then WidgetText UI.txtGB_R, Str$(Val(WidgetText$(UI.txtGB_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdGB_RInc) Then WidgetText UI.txtGB_R, Str$(Val(WidgetText$(UI.txtGB_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtGB_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBR_ADec) Then WidgetText UI.txtBR_A, Str$(Val(WidgetText$(UI.txtBR_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBR_AInc) Then WidgetText UI.txtBR_A, Str$(Val(WidgetText$(UI.txtBR_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBR_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBR_RDec) Then WidgetText UI.txtBR_R, Str$(Val(WidgetText$(UI.txtBR_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBR_RInc) Then WidgetText UI.txtBR_R, Str$(Val(WidgetText$(UI.txtBR_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBR_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBG_ADec) Then WidgetText UI.txtBG_A, Str$(Val(WidgetText$(UI.txtBG_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBG_AInc) Then WidgetText UI.txtBG_A, Str$(Val(WidgetText$(UI.txtBG_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBG_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBG_RDec) Then WidgetText UI.txtBG_R, Str$(Val(WidgetText$(UI.txtBG_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBG_RInc) Then WidgetText UI.txtBG_R, Str$(Val(WidgetText$(UI.txtBG_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBG_R) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBB_ADec) Then WidgetText UI.txtBB_A, Str$(Val(WidgetText$(UI.txtBB_A)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBB_AInc) Then WidgetText UI.txtBB_A, Str$(Val(WidgetText$(UI.txtBB_A)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBB_A) Then UI.changed = TRUE
+    If WidgetClicked(UI.cmdBB_RDec) Then WidgetText UI.txtBB_R, Str$(Val(WidgetText$(UI.txtBB_R)) - 1): UI.changed = TRUE
+    If WidgetClicked(UI.cmdBB_RInc) Then WidgetText UI.txtBB_R, Str$(Val(WidgetText$(UI.txtBB_R)) + 1): UI.changed = TRUE
+    If TextBoxEntered(UI.txtBB_R) Then UI.changed = TRUE
+
     If UI.changed Then
         Universe.particleSize = Clamp(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
         WidgetText UI.txtParticleSize, Str$(Universe.particleSize)
 
         If Universe.particles <> Val(WidgetText$(UI.txtParticles)) Then
             Universe.particles = Clamp(Val(WidgetText$(UI.txtParticles)), 1, PARTICLES_MAX)
+            WidgetText UI.txtParticles, Str$(Universe.particles)
             InitializeParticles
         End If
+
+        ' Update rule values (auto-generated)
+        Group(GROUP_RED).rule1.attraction = Clamp(Val(WidgetText(UI.txtRR_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtRR_A, Str$(Group(GROUP_RED).rule1.attraction)
+        Group(GROUP_RED).rule1.radius = Clamp(Val(WidgetText(UI.txtRR_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtRR_R, Str$(Group(GROUP_RED).rule1.radius)
+        Group(GROUP_RED).rule2.attraction = Clamp(Val(WidgetText(UI.txtRG_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtRG_A, Str$(Group(GROUP_RED).rule2.attraction)
+        Group(GROUP_RED).rule2.radius = Clamp(Val(WidgetText(UI.txtRG_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtRG_R, Str$(Group(GROUP_RED).rule2.radius)
+        Group(GROUP_RED).rule3.attraction = Clamp(Val(WidgetText(UI.txtRB_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtRB_A, Str$(Group(GROUP_RED).rule3.attraction)
+        Group(GROUP_RED).rule3.radius = Clamp(Val(WidgetText(UI.txtRB_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtRB_R, Str$(Group(GROUP_RED).rule3.radius)
+        Group(GROUP_GREEN).rule1.attraction = Clamp(Val(WidgetText(UI.txtGR_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtGR_A, Str$(Group(GROUP_GREEN).rule1.attraction)
+        Group(GROUP_GREEN).rule1.radius = Clamp(Val(WidgetText(UI.txtGR_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtGR_R, Str$(Group(GROUP_GREEN).rule1.radius)
+        Group(GROUP_GREEN).rule2.attraction = Clamp(Val(WidgetText(UI.txtGG_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtGG_A, Str$(Group(GROUP_GREEN).rule2.attraction)
+        Group(GROUP_GREEN).rule2.radius = Clamp(Val(WidgetText(UI.txtGG_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtGG_R, Str$(Group(GROUP_GREEN).rule2.radius)
+        Group(GROUP_GREEN).rule3.attraction = Clamp(Val(WidgetText(UI.txtGB_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtGB_A, Str$(Group(GROUP_GREEN).rule3.attraction)
+        Group(GROUP_GREEN).rule3.radius = Clamp(Val(WidgetText(UI.txtGB_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtGB_R, Str$(Group(GROUP_GREEN).rule3.radius)
+        Group(GROUP_BLUE).rule1.attraction = Clamp(Val(WidgetText(UI.txtBR_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtBR_A, Str$(Group(GROUP_BLUE).rule1.attraction)
+        Group(GROUP_BLUE).rule1.radius = Clamp(Val(WidgetText(UI.txtBR_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtBR_R, Str$(Group(GROUP_BLUE).rule1.radius)
+        Group(GROUP_BLUE).rule2.attraction = Clamp(Val(WidgetText(UI.txtBG_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtBG_A, Str$(Group(GROUP_BLUE).rule2.attraction)
+        Group(GROUP_BLUE).rule2.radius = Clamp(Val(WidgetText(UI.txtBG_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtBG_R, Str$(Group(GROUP_BLUE).rule2.radius)
+        Group(GROUP_BLUE).rule3.attraction = Clamp(Val(WidgetText(UI.txtBB_A)), ATTRACTION_MIN, ATTRACTION_MAX)
+        WidgetText UI.txtBB_A, Str$(Group(GROUP_BLUE).rule3.attraction)
+        Group(GROUP_BLUE).rule3.radius = Clamp(Val(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
+        WidgetText UI.txtBB_R, Str$(Group(GROUP_BLUE).rule3.radius)
 
         UI.changed = FALSE
     End If
 End Sub
 
 
-Sub PrintRightAligned (text As String, cx As Long, cy As Long)
-    Locate cy, cx - Len(text)
-    Print text;
+Sub DrawStringRightAligned (text As String, x As Long, y As Long)
+    PrintString (x - Len(text) * FontWidth, y), text
 End Sub
 
 
 ' This draws the static texts next to the UI buttons to show what they do
 Sub DrawLabels
     If Not UI.hideLabels Then
-        Dim cx As Long
-
-        cx = UI.start.x \ UI_FONT_WIDTH
-
         Color Gray
 
-        PrintRightAligned "Particles:", cx, UI_HEIGHT_CHARS * 6
-        PrintRightAligned "Size:", cx, UI_HEIGHT_CHARS * 7
+        Dim As Long x, y
+
+        x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE - FontWidth
+        y = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) * 5 + (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ 2 - FontHeight \ 2
+        DrawStringRightAligned "Particles:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Size:", x, y
+
+        ' Auto-generated
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract R <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius R <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract R <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius R <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract R <-> B:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius R <-> B:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract G <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius G <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract G <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius G <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract G <-> B:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius G <-> B:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract B <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius B <-> R:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract B <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius B <-> G:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Attract B <-> B:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Radius B <-> B:", x, y
     End If
 End Sub
 
@@ -331,28 +613,28 @@ End Sub
 ' Initializes all groups
 Sub InitializeGroups
     Group(GROUP_RED).clr = NP_Red
-    Group(GROUP_RED).rule1.attraction = RandomBetween(-100, 100)
-    Group(GROUP_RED).rule1.radius = RandomBetween(10, 200)
-    Group(GROUP_RED).rule2.attraction = RandomBetween(-100, 100)
-    Group(GROUP_RED).rule2.radius = RandomBetween(10, 200)
-    Group(GROUP_RED).rule3.attraction = RandomBetween(-100, 100)
-    Group(GROUP_RED).rule3.radius = RandomBetween(10, 200)
+    Group(GROUP_RED).rule1.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_RED).rule1.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_RED).rule2.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_RED).rule2.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_RED).rule3.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_RED).rule3.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
 
     Group(GROUP_GREEN).clr = NP_Green
-    Group(GROUP_GREEN).rule1.attraction = RandomBetween(-100, 100)
-    Group(GROUP_GREEN).rule1.radius = RandomBetween(10, 200)
-    Group(GROUP_GREEN).rule2.attraction = RandomBetween(-100, 100)
-    Group(GROUP_GREEN).rule2.radius = RandomBetween(10, 200)
-    Group(GROUP_GREEN).rule3.attraction = RandomBetween(-100, 100)
-    Group(GROUP_GREEN).rule3.radius = RandomBetween(10, 200)
+    Group(GROUP_GREEN).rule1.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_GREEN).rule1.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_GREEN).rule2.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_GREEN).rule2.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_GREEN).rule3.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_GREEN).rule3.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
 
     Group(GROUP_BLUE).clr = NP_Blue
-    Group(GROUP_BLUE).rule1.attraction = RandomBetween(-100, 100)
-    Group(GROUP_BLUE).rule1.radius = RandomBetween(10, 200)
-    Group(GROUP_BLUE).rule2.attraction = RandomBetween(-100, 100)
-    Group(GROUP_BLUE).rule2.radius = RandomBetween(10, 200)
-    Group(GROUP_BLUE).rule3.attraction = RandomBetween(-100, 100)
-    Group(GROUP_BLUE).rule3.radius = RandomBetween(10, 200)
+    Group(GROUP_BLUE).rule1.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_BLUE).rule1.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_BLUE).rule2.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_BLUE).rule2.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_BLUE).rule3.attraction = RandomBetween(ATTRACTION_MIN, ATTRACTION_MAX)
+    Group(GROUP_BLUE).rule3.radius = RandomBetween(RADIUS_MIN, RADIUS_MAX)
 End Sub
 
 
@@ -388,7 +670,7 @@ Sub ApplyRule (grp1() As ParticleType, grp2() As ParticleType, rule As RuleType)
     Dim As Single g, dx, dy, r, fx, fy, f
     Dim As Unsigned Long i, j
 
-    g = rule.attraction / -100
+    g = rule.attraction / ATTRACTION_MIN
 
     For i = 1 To Universe.particles
         fx = 0
@@ -428,13 +710,13 @@ Sub RunUniverse
     ApplyRule GroupRed(), GroupGreen(), Group(GROUP_RED).rule2
     ApplyRule GroupRed(), GroupBlue(), Group(GROUP_RED).rule3
 
-    ApplyRule GroupGreen(), GroupGreen(), Group(GROUP_GREEN).rule1
-    ApplyRule GroupGreen(), GroupRed(), Group(GROUP_GREEN).rule2
+    ApplyRule GroupGreen(), GroupRed(), Group(GROUP_GREEN).rule1
+    ApplyRule GroupGreen(), GroupGreen(), Group(GROUP_GREEN).rule2
     ApplyRule GroupGreen(), GroupBlue(), Group(GROUP_GREEN).rule3
 
-    ApplyRule GroupBlue(), GroupBlue(), Group(GROUP_BLUE).rule1
-    ApplyRule GroupBlue(), GroupRed(), Group(GROUP_BLUE).rule2
-    ApplyRule GroupBlue(), GroupGreen(), Group(GROUP_BLUE).rule3
+    ApplyRule GroupBlue(), GroupRed(), Group(GROUP_BLUE).rule1
+    ApplyRule GroupBlue(), GroupGreen(), Group(GROUP_BLUE).rule2
+    ApplyRule GroupBlue(), GroupBlue(), Group(GROUP_BLUE).rule3
 End Sub
 
 
