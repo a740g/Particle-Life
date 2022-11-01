@@ -85,23 +85,23 @@ $VersionInfo:PRODUCTVERSION#=1,0,0,0
 '---------------------------------------------------------------------------------------------------------
 Const APP_NAME = "QB64-PE Particle Life"
 
-Const PARTICLES_DEFAULT = 200 ' this is the default numbers of particles we start in each group
-Const PARTICLES_MAX = 999 ' maximum number of particles in a group
 Const GROUPS_MAX = 3 ' maximum number of groups in the universe
+Const PARTICLES_PER_GROUP_DEFAULT = 200 ' this is the default numbers of particles we start in each group
+Const PARTICLES_PER_GROUP_MAX = 999 ' maximum number of particles in a group
 Const PARTICLE_SIZE_DEFAULT = 1 ' default radius of each particle
 Const PARTICLE_SIZE_MAX = 8 ' maximum size of each particle
-
+' Group IDs
 Const GROUP_RED = 1
 Const GROUP_GREEN = 2
 Const GROUP_BLUE = 3
-
+' Group properties limits
 Const ATTRACT_MIN = -100
 Const ATTRACT_MAX = 100
 Const RADIUS_MIN = 0
 Const RADIUS_MAX = 200
-
+' Max frame rate that we can go to
 Const FRAME_RATE_MAX = 120
-
+' UI constants
 Const UI_WIDGET_HEIGHT = 24 ' defaut widget height
 Const UI_WIDGET_SPACE = 2 ' space between widgets
 Const UI_PUSH_BUTTON_WIDTH_LARGE = 120
@@ -121,7 +121,7 @@ End Type
 ' This defines the universe
 Type UniverseType
     size As Vector2DType ' this MUST be set by the user - typically window width & height
-    particles As Unsigned Long ' this MUST be set by the user - typically from the UI
+    particlesPerGroup As Unsigned Long ' this MUST be set by the user - typically from the UI
     particleSize As Unsigned Long ' this may be set by the user - typically from the UI
 End Type
 
@@ -152,6 +152,7 @@ Type UIType ' bunch of UI widgets to change stuff
     cmdExit As Long ' exit button
     cmdShowFPS As Long ' hide / show FPS
     cmdAbout As Long ' shows an about dialog
+    cmdReset As Long ' reset particles without changing properties
     cmdRandom As Long ' random madness
     ' Controls the number of particles
     cmdParticlesDec As Long
@@ -243,7 +244,7 @@ Randomize Timer
 ' Setup universe
 Universe.size.x = Width
 Universe.size.y = Height
-Universe.particles = PARTICLES_DEFAULT
+Universe.particlesPerGroup = PARTICLES_PER_GROUP_DEFAULT
 Universe.particleSize = PARTICLE_SIZE_DEFAULT
 
 InitializeGroups ' setup the groups
@@ -254,7 +255,7 @@ InitializeUI ' initialize the UI
 Do
     RunUniverse ' make the universe go
 
-    Color White, &HFF0F0F0F~& ' this is required since the UI code can change the colors
+    Color White, Black ' this is required since the UI code can change the colors
     Cls ' clear the framebuffer
 
     ' From here on everything is drawn in z order
@@ -296,10 +297,12 @@ Sub InitializeUI
     y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdShowFPS = PushButtonNew("Show FPS", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, TRUE)
     y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdReset = PushButtonNew("Reset", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdRandom = PushButtonNew("Random", x, y, UI_PUSH_BUTTON_WIDTH_LARGE, UI_WIDGET_HEIGHT, FALSE)
     y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdParticlesDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
-    UI.txtParticles = TextBoxNew(Str$(Universe.particles), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
+    UI.txtParticles = TextBoxNew(Str$(Universe.particlesPerGroup), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC Or TEXT_BOX_DASH Or TEXT_BOX_DOT)
     UI.cmdParticlesInc = PushButtonNew(Chr$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
     y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
     UI.cmdParticleSizeDec = PushButtonNew(Chr$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, FALSE)
@@ -393,6 +396,12 @@ Sub UpdateUI
     If WidgetClicked(UI.cmdParticlesInc) Then WidgetText UI.txtParticles, Str$(Val(WidgetText$(UI.txtParticles)) + 1): UI.changed = TRUE
     If TextBoxEntered(UI.txtParticles) Then UI.changed = TRUE
 
+    ' Check if user clicked the reset button
+    If WidgetClicked(UI.cmdReset) Then
+        ' Then just reset the particles using the same parameters
+        InitializeParticles
+    End If
+
     ' Check if user clicked the random button
     If WidgetClicked(UI.cmdRandom) Then
         InitializeGroups
@@ -426,7 +435,7 @@ Sub UpdateUI
         $End If
     End If
 
-    ' Check is the show button was pressed
+    ' Check if the show button was pressed
     If WidgetClicked(UI.cmdShow) Then
         ' If so, then change the UI visibility based on the show button's state
         WidgetVisibleAll PushButtonDepressed(UI.cmdShow)
@@ -495,9 +504,9 @@ Sub UpdateUI
         Universe.particleSize = Clamp(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
         WidgetText UI.txtParticleSize, Str$(Universe.particleSize)
 
-        If Universe.particles <> Val(WidgetText$(UI.txtParticles)) Then
-            Universe.particles = Clamp(Val(WidgetText$(UI.txtParticles)), 1, PARTICLES_MAX)
-            WidgetText UI.txtParticles, Str$(Universe.particles)
+        If Universe.particlesPerGroup <> Val(WidgetText$(UI.txtParticles)) Then
+            Universe.particlesPerGroup = Clamp(Val(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
+            WidgetText UI.txtParticles, Str$(Universe.particlesPerGroup)
             InitializeParticles
         End If
 
@@ -557,10 +566,10 @@ Sub DrawLabels
         Dim As Long x, y
 
         x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE - FontWidth
-        y = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) * 5 + (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ 2 - FontHeight \ 2
-        DrawStringRightAligned "Particles:", x, y
+        y = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) * 6 + (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ 2 - FontHeight \ 2
+        DrawStringRightAligned "Particles / Group:", x, y
         y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
-        DrawStringRightAligned "Size:", x, y
+        DrawStringRightAligned "Particle size:", x, y
 
         ' Auto-generated
         y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
@@ -644,21 +653,21 @@ End Sub
 Sub InitializeParticles
     Dim As Unsigned Long i
 
-    ReDim GroupRed(1 To Universe.particles) As ParticleType
-    ReDim GroupGreen(1 To Universe.particles) As ParticleType
-    ReDim GroupBlue(1 To Universe.particles) As ParticleType
+    ReDim GroupRed(1 To Universe.particlesPerGroup) As ParticleType
+    ReDim GroupGreen(1 To Universe.particlesPerGroup) As ParticleType
+    ReDim GroupBlue(1 To Universe.particlesPerGroup) As ParticleType
 
-    For i = 1 To Universe.particles
+    For i = 1 To Universe.particlesPerGroup
         GroupRed(i).position.x = RandomBetween(50, Universe.size.x - 51)
         GroupRed(i).position.y = RandomBetween(50, Universe.size.y - 51)
     Next
 
-    For i = 1 To Universe.particles
+    For i = 1 To Universe.particlesPerGroup
         GroupGreen(i).position.x = RandomBetween(50, Universe.size.x - 51)
         GroupGreen(i).position.y = RandomBetween(50, Universe.size.y - 51)
     Next
 
-    For i = 1 To Universe.particles
+    For i = 1 To Universe.particlesPerGroup
         GroupBlue(i).position.x = RandomBetween(50, Universe.size.x - 51)
         GroupBlue(i).position.y = RandomBetween(50, Universe.size.y - 51)
     Next
@@ -674,10 +683,10 @@ Sub ApplyRule (grp1() As ParticleType, grp2() As ParticleType, rule As RuleType)
 
     g = rule.attract / ATTRACT_MIN
 
-    For i = 1 To Universe.particles
+    For i = 1 To Universe.particlesPerGroup
         fx = 0
         fy = 0
-        For j = 1 To Universe.particles
+        For j = 1 To Universe.particlesPerGroup
             ' Calculate the distance between points using Pythagorean theorem
             dx = grp1(i).position.x - grp2(j).position.x
             dy = grp1(i).position.y - grp2(j).position.y
@@ -727,7 +736,7 @@ Sub DrawGroup (grp() As ParticleType, gId As Unsigned Long)
     Dim As Unsigned Long i
 
     Color Group(gId).clr
-    For i = 1 To Universe.particles
+    For i = 1 To Universe.particlesPerGroup
         CircleFill grp(i).position.x, grp(i).position.y, Universe.particleSize
     Next
 End Sub
