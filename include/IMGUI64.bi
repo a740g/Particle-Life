@@ -42,29 +42,6 @@ $If IMGUI64_BI = UNDEFINED Then
 
     Const WIDGET_BLINK_INTERVAL = 500 ' number of ticks to wait for next blink
 
-    ' Common keyboard keys
-    Const KEY_ESCAPE = 27
-    Const KEY_TAB = 9
-    Const KEY_ENTER = 13
-    Const KEY_SPACE_BAR = 32
-    Const KEY_BACKSPACE = 8
-    Const KEY_INSERT = 20992
-    Const KEY_DELETE = 21248
-    Const KEY_HOME = 18176
-    Const KEY_END = 20224
-    Const KEY_PAGE_UP = 18688
-    Const KEY_PAGE_DOWN = 20736
-    Const KEY_LEFT_ARROW = 19200
-    Const KEY_RIGHT_ARROW = 19712
-    Const KEY_UP_ARROW = 18432
-    Const KEY_DOWN_ARROW = 20480
-    Const KEY_0 = 48
-    Const KEY_9 = 57
-    Const KEY_LOWER_A = 97
-    Const KEY_LOWER_Z = 122
-    Const KEY_UPPER_A = 65
-    Const KEY_UPPER_Z = 90
-
     ' QB64 errors that we throw if something bad happens
     Const ERROR_INVALID_HANDLE = 258
     Const ERROR_FEATURE_UNAVAILABLE = 73
