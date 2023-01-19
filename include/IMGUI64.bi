@@ -41,10 +41,6 @@ $If IMGUI64_BI = UNDEFINED Then
     Const WIDGET_CLASS_COUNT = 2 ' this is the total number of widgets
 
     Const WIDGET_BLINK_INTERVAL = 500 ' number of ticks to wait for next blink
-
-    ' QB64 errors that we throw if something bad happens
-    Const ERROR_INVALID_HANDLE = 258
-    Const ERROR_FEATURE_UNAVAILABLE = 73
     '-----------------------------------------------------------------------------------------------------
 
     '-----------------------------------------------------------------------------------------------------
@@ -112,7 +108,7 @@ $If IMGUI64_BI = UNDEFINED Then
     ' EXTERNAL LIBRARIES
     '-----------------------------------------------------------------------------------------------------
     Declare CustomType Library
-        Function GetTicks&& ' we use this for keeping track of the focus blink counter
+        Function GetTicks~&& ' we use this for keeping track of the focus blink counter
     End Declare
     '-----------------------------------------------------------------------------------------------------
 

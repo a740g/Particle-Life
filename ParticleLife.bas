@@ -1,6 +1,6 @@
 '---------------------------------------------------------------------------------------------------------
 ' Particle Life for QB64-PE
-' Copyright (c) 2022 Samuel Gomes
+' Copyright (c) 2023 Samuel Gomes
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -13,16 +13,16 @@
 ' METACOMMANDS
 '---------------------------------------------------------------------------------------------------------
 $ExeIcon:'./ParticleLife.ico'
-$VersionInfo:ProductName='Particle Life'
-$VersionInfo:CompanyName='Samuel Gomes'
-$VersionInfo:LegalCopyright='Copyright (c) 2022 Samuel Gomes'
-$VersionInfo:LegalTrademarks='All trademarks are property of their respective owners'
-$VersionInfo:Web='https://github.com/a740g'
-$VersionInfo:Comments='https://github.com/a740g'
-$VersionInfo:InternalName='ParticleLife'
-$VersionInfo:OriginalFilename='ParticleLife.exe'
-$VersionInfo:FileDescription='Particle Life executable'
-$VersionInfo:FILEVERSION#=1,0,0,0
+$VersionInfo:ProductName=Particle Life
+$VersionInfo:CompanyName=Samuel Gomes
+$VersionInfo:LegalCopyright=Copyright (c) 2022 Samuel Gomes
+$VersionInfo:LegalTrademarks=All trademarks are property of their respective owners
+$VersionInfo:Web=https://github.com/a740g
+$VersionInfo:Comments=https://github.com/a740g
+$VersionInfo:InternalName=ParticleLife
+$VersionInfo:OriginalFilename=ParticleLife.exe
+$VersionInfo:FileDescription=Particle Life executable
+$VersionInfo:FILEVERSION#=1,0,0,1
 $VersionInfo:PRODUCTVERSION#=1,0,0,0
 '---------------------------------------------------------------------------------------------------------
 
@@ -431,7 +431,7 @@ Sub UpdateUI
     ' Check if the about button was clicked
     If WidgetClicked(UI.cmdAbout) Then
         $If VERSION > 3.3 Then
-            MessageBox "About", APP_NAME + String$(2, KEY_ENTER) + "Copyright (c) 2022 Samuel Gomes" + String$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
+            MessageBox "About", APP_NAME + String$(2, KEY_ENTER) + "Copyright (c) 2023 Samuel Gomes" + String$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
         $End If
     End If
 
