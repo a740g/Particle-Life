@@ -1,4 +1,4 @@
-# Particle Life
+# Particle Life Simulation
 
 ![screenshot](screenshots/screenshot1.png)
 ![screenshot](screenshots/screenshot2.png)
@@ -15,4 +15,4 @@ As usual, I do not accept responsibility for any effects, adverse or otherwise, 
 
 ## Important Note
 
-This uses new features introduced in [QB64-PE v3.4.0+](https://github.com/QB64-Phoenix-Edition/QB64pe/releases) and as such may not work correctly or reliably with older versions of QB64-PE or any version of QB64. Also, QB64 has issues when using `$Color:32` and `$NoPrefix` together. Sigh!
+This uses new features introduced in [QB64-PE](https://github.com/QB64-Phoenix-Edition/QB64pe/releases) and as such may not work with anything else.

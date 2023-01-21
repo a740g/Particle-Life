@@ -22,7 +22,7 @@ $VersionInfo:Comments=https://github.com/a740g
 $VersionInfo:InternalName=ParticleLife
 $VersionInfo:OriginalFilename=ParticleLife.exe
 $VersionInfo:FileDescription=Particle Life executable
-$VersionInfo:FILEVERSION#=1,0,0,1
+$VersionInfo:FILEVERSION#=1,0,0,3
 $VersionInfo:PRODUCTVERSION#=1,0,0,0
 '---------------------------------------------------------------------------------------------------------
 
