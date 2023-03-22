@@ -46,11 +46,6 @@ $If IMGUI64_BI = UNDEFINED Then
     '-----------------------------------------------------------------------------------------------------
     ' USER DEFINED TYPES
     '-----------------------------------------------------------------------------------------------------
-    Type Vector2DType ' a 2D vector
-        x As Long
-        y As Long
-    End Type
-
     Type RectangleType ' a 2D rectangle
         a As Vector2DType
         b As Vector2DType

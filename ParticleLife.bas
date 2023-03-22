@@ -15,14 +15,14 @@
 $ExeIcon:'./ParticleLife.ico'
 $VersionInfo:ProductName=Particle Life
 $VersionInfo:CompanyName=Samuel Gomes
-$VersionInfo:LegalCopyright=Copyright (c) 2022 Samuel Gomes
+$VersionInfo:LegalCopyright=Copyright (c) 2023 Samuel Gomes
 $VersionInfo:LegalTrademarks=All trademarks are property of their respective owners
 $VersionInfo:Web=https://github.com/a740g
 $VersionInfo:Comments=https://github.com/a740g
 $VersionInfo:InternalName=ParticleLife
 $VersionInfo:OriginalFilename=ParticleLife.exe
 $VersionInfo:FileDescription=Particle Life executable
-$VersionInfo:FILEVERSION#=1,0,0,3
+$VersionInfo:FILEVERSION#=1,0,0,4
 $VersionInfo:PRODUCTVERSION#=1,0,0,0
 '---------------------------------------------------------------------------------------------------------
 
@@ -112,12 +112,6 @@ Const UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMA
 '---------------------------------------------------------------------------------------------------------
 ' USER DEFINED TYPES
 '---------------------------------------------------------------------------------------------------------
-' A typical 2D floating point vector
-Type Vector2DFType
-    x As Single
-    y As Single
-End Type
-
 ' This defines the universe
 Type UniverseType
     size As Vector2DType ' this MUST be set by the user - typically window width & height
