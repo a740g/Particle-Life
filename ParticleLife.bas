@@ -6,7 +6,7 @@
 '---------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------
-'$Include:'include/IMGUI.bi'
+'$Include:'include/ImGUI.bi'
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -765,69 +765,12 @@ Sub DrawUniverse
             DrawGroup GroupBlue(), GROUP_BLUE
     End Select
 End Sub
-
-
-' Draws a filled circle
-' CX = center x coordinate
-' CY = center y coordinate
-'  R = radius
-Sub CircleFill (cx As Long, cy As Long, r As Long)
-    Dim As Long radius, radiusError, X, Y
-
-    radius = Abs(r)
-    radiusError = -radius
-    X = radius
-    Y = 0
-
-    If radius = 0 Then
-        PSet (cx, cy)
-        Exit Sub
-    End If
-
-    Line (cx - X, cy)-(cx + X, cy), , BF
-
-    While X > Y
-        radiusError = radiusError + Y * 2 + 1
-
-        If radiusError >= 0 Then
-            If X <> Y + 1 Then
-                Line (cx - Y, cy - X)-(cx + Y, cy - X), , BF
-                Line (cx - Y, cy + X)-(cx + Y, cy + X), , BF
-            End If
-            X = X - 1
-            radiusError = radiusError - X * 2
-        End If
-
-        Y = Y + 1
-
-        Line (cx - X, cy - Y)-(cx + X, cy - Y), , BF
-        Line (cx - X, cy + Y)-(cx + X, cy + Y), , BF
-    Wend
-End Sub
-
-
-' Calculates and returns the FPS when repeatedly called inside a loop
-Function CalculateFPS~&
-    Static As Unsigned Long counter, finalFPS
-    Static lastTime As Integer64
-    Dim currentTime As Integer64
-
-    counter = counter + 1
-
-    currentTime = GetTicks
-    If currentTime > lastTime + 1000 Then
-        lastTime = currentTime
-        finalFPS = counter
-        counter = 0
-    End If
-
-    CalculateFPS = finalFPS
-End Function
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
 ' MODULE FILES
 '---------------------------------------------------------------------------------------------------------
-'$Include:'include/IMGUI.bas'
+'$Include:'include/ImGUI.bas'
+'$Include:'include/GfxExt.bas'
 '---------------------------------------------------------------------------------------------------------
 
