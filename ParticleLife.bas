@@ -6,7 +6,7 @@
 '---------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------
-'$Include:'include/IMGUI64.bi'
+'$Include:'include/IMGUI.bi'
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -22,8 +22,8 @@ $VersionInfo:Comments=https://github.com/a740g
 $VersionInfo:InternalName=ParticleLife
 $VersionInfo:OriginalFilename=ParticleLife.exe
 $VersionInfo:FileDescription=Particle Life executable
-$VersionInfo:FILEVERSION#=1,0,0,4
-$VersionInfo:PRODUCTVERSION#=1,0,0,0
+$VersionInfo:FILEVERSION#=1,0,1,0
+$VersionInfo:PRODUCTVERSION#=1,0,1,0
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -64,9 +64,9 @@ $VersionInfo:PRODUCTVERSION#=1,0,0,0
 '            //printf("If WidgetClicked(UI.cmd%c%c_RInc) Then WidgetText UI.txt%c%c_R, Str$(Val(WidgetText$(UI.txt%c%c_R)) + 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
 '            //printf("If TextBoxEntered(UI.txt%c%c_R) Then UI.changed = TRUE\n", grp[i].in, grp[j].in);
 
-'            //printf("Group(GROUP_%s).rule%i.attract = Clamp(Val(WidgetText(UI.txt%c%c_A)), ATTRACT_MIN, ATTRACT_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("Group(GROUP_%s).rule%i.attract = ClampLong(Val(WidgetText(UI.txt%c%c_A)), ATTRACT_MIN, ATTRACT_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
 '            //printf("WidgetText UI.txt%c%c_A, Str$(Group(GROUP_%s).rule%i.attract)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
-'            //printf("Group(GROUP_%s).rule%i.radius = Clamp(Val(WidgetText(UI.txt%c%c_R)), RADIUS_MIN, RADIUS_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("Group(GROUP_%s).rule%i.radius = ClampLong(Val(WidgetText(UI.txt%c%c_R)), RADIUS_MIN, RADIUS_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
 '            //printf("WidgetText UI.txt%c%c_R, Str$(Group(GROUP_%s).rule%i.radius)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
 
 '            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
@@ -228,12 +228,11 @@ ReDim Shared GroupBlue(1 To 1) As ParticleType ' Blue particles
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-Dim r As Unsigned Long
-r = Clamp(Val(Command$), 1, 8) ' Check the user wants to use a lower resolution
+Dim r As Unsigned Long: r = ClampLong(Val(Command$), 1, 8) ' Check the user wants to use a lower resolution
 Screen NewImage(DesktopWidth \ r, DesktopHeight \ r, 32)
 FullScreen SquarePixels , Smooth
 PrintMode KeepBackground
-Randomize Timer
+SRand Timer
 
 ' Setup universe
 Universe.size.x = Width
@@ -495,51 +494,51 @@ Sub UpdateUI
     If TextBoxEntered(UI.txtBB_R) Then UI.changed = TRUE
 
     If UI.changed Then
-        Universe.particleSize = Clamp(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
+        Universe.particleSize = ClampLong(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
         WidgetText UI.txtParticleSize, Str$(Universe.particleSize)
 
         If Universe.particlesPerGroup <> Val(WidgetText$(UI.txtParticles)) Then
-            Universe.particlesPerGroup = Clamp(Val(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
+            Universe.particlesPerGroup = ClampLong(Val(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
             WidgetText UI.txtParticles, Str$(Universe.particlesPerGroup)
             InitializeParticles
         End If
 
         ' Update rule values (auto-generated)
-        Group(GROUP_RED).rule1.attract = Clamp(Val(WidgetText(UI.txtRR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule1.attract = ClampLong(Val(WidgetText(UI.txtRR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRR_A, Str$(Group(GROUP_RED).rule1.attract)
-        Group(GROUP_RED).rule1.radius = Clamp(Val(WidgetText(UI.txtRR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule1.radius = ClampLong(Val(WidgetText(UI.txtRR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRR_R, Str$(Group(GROUP_RED).rule1.radius)
-        Group(GROUP_RED).rule2.attract = Clamp(Val(WidgetText(UI.txtRG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule2.attract = ClampLong(Val(WidgetText(UI.txtRG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRG_A, Str$(Group(GROUP_RED).rule2.attract)
-        Group(GROUP_RED).rule2.radius = Clamp(Val(WidgetText(UI.txtRG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule2.radius = ClampLong(Val(WidgetText(UI.txtRG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRG_R, Str$(Group(GROUP_RED).rule2.radius)
-        Group(GROUP_RED).rule3.attract = Clamp(Val(WidgetText(UI.txtRB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule3.attract = ClampLong(Val(WidgetText(UI.txtRB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRB_A, Str$(Group(GROUP_RED).rule3.attract)
-        Group(GROUP_RED).rule3.radius = Clamp(Val(WidgetText(UI.txtRB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule3.radius = ClampLong(Val(WidgetText(UI.txtRB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRB_R, Str$(Group(GROUP_RED).rule3.radius)
-        Group(GROUP_GREEN).rule1.attract = Clamp(Val(WidgetText(UI.txtGR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule1.attract = ClampLong(Val(WidgetText(UI.txtGR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGR_A, Str$(Group(GROUP_GREEN).rule1.attract)
-        Group(GROUP_GREEN).rule1.radius = Clamp(Val(WidgetText(UI.txtGR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule1.radius = ClampLong(Val(WidgetText(UI.txtGR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGR_R, Str$(Group(GROUP_GREEN).rule1.radius)
-        Group(GROUP_GREEN).rule2.attract = Clamp(Val(WidgetText(UI.txtGG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule2.attract = ClampLong(Val(WidgetText(UI.txtGG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGG_A, Str$(Group(GROUP_GREEN).rule2.attract)
-        Group(GROUP_GREEN).rule2.radius = Clamp(Val(WidgetText(UI.txtGG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule2.radius = ClampLong(Val(WidgetText(UI.txtGG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGG_R, Str$(Group(GROUP_GREEN).rule2.radius)
-        Group(GROUP_GREEN).rule3.attract = Clamp(Val(WidgetText(UI.txtGB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule3.attract = ClampLong(Val(WidgetText(UI.txtGB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGB_A, Str$(Group(GROUP_GREEN).rule3.attract)
-        Group(GROUP_GREEN).rule3.radius = Clamp(Val(WidgetText(UI.txtGB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule3.radius = ClampLong(Val(WidgetText(UI.txtGB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGB_R, Str$(Group(GROUP_GREEN).rule3.radius)
-        Group(GROUP_BLUE).rule1.attract = Clamp(Val(WidgetText(UI.txtBR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule1.attract = ClampLong(Val(WidgetText(UI.txtBR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBR_A, Str$(Group(GROUP_BLUE).rule1.attract)
-        Group(GROUP_BLUE).rule1.radius = Clamp(Val(WidgetText(UI.txtBR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule1.radius = ClampLong(Val(WidgetText(UI.txtBR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBR_R, Str$(Group(GROUP_BLUE).rule1.radius)
-        Group(GROUP_BLUE).rule2.attract = Clamp(Val(WidgetText(UI.txtBG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule2.attract = ClampLong(Val(WidgetText(UI.txtBG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBG_A, Str$(Group(GROUP_BLUE).rule2.attract)
-        Group(GROUP_BLUE).rule2.radius = Clamp(Val(WidgetText(UI.txtBG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule2.radius = ClampLong(Val(WidgetText(UI.txtBG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBG_R, Str$(Group(GROUP_BLUE).rule2.radius)
-        Group(GROUP_BLUE).rule3.attract = Clamp(Val(WidgetText(UI.txtBB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule3.attract = ClampLong(Val(WidgetText(UI.txtBB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBB_A, Str$(Group(GROUP_BLUE).rule3.attract)
-        Group(GROUP_BLUE).rule3.radius = Clamp(Val(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule3.radius = ClampLong(Val(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBB_R, Str$(Group(GROUP_BLUE).rule3.radius)
 
         UI.changed = FALSE
@@ -807,24 +806,6 @@ Sub CircleFill (cx As Long, cy As Long, r As Long)
 End Sub
 
 
-' Generates a random number between lo & hi
-Function RandomBetween& (lo As Long, hi As Long)
-    RandomBetween = lo + Rnd * (hi - lo)
-End Function
-
-
-' Clamps v between lo and hi
-Function Clamp& (v As Long, lo As Long, hi As Long)
-    If v < lo Then
-        Clamp = lo
-    ElseIf v > hi Then
-        Clamp = hi
-    Else
-        Clamp = v
-    End If
-End Function
-
-
 ' Calculates and returns the FPS when repeatedly called inside a loop
 Function CalculateFPS~&
     Static As Unsigned Long counter, finalFPS
@@ -847,6 +828,6 @@ End Function
 '---------------------------------------------------------------------------------------------------------
 ' MODULE FILES
 '---------------------------------------------------------------------------------------------------------
-'$Include:'include/IMGUI64.bas'
+'$Include:'include/IMGUI.bas'
 '---------------------------------------------------------------------------------------------------------
 
