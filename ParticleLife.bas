@@ -12,6 +12,9 @@
 '---------------------------------------------------------------------------------------------------------
 ' METACOMMANDS
 '---------------------------------------------------------------------------------------------------------
+$NoPrefix
+$Resize:Smooth
+$Color:32
 $ExeIcon:'./ParticleLife.ico'
 $VersionInfo:ProductName=Particle Life
 $VersionInfo:CompanyName=Samuel Gomes
@@ -609,7 +612,7 @@ End Sub
 Sub DrawFPS
     If PushButtonDepressed(UI.cmdShowFPS) Then
         Color Yellow
-        PrintString (0, 0), Str$(CalculateFPS) + " FPS @" + Str$(Universe.size.x) + " x" + Str$(Universe.size.y)
+        PrintString (0, 0), Str$(GetFPS) + " FPS @" + Str$(Universe.size.x) + " x" + Str$(Universe.size.y)
     End If
 End Sub
 
@@ -773,4 +776,3 @@ End Sub
 '$Include:'include/ImGUI.bas'
 '$Include:'include/GfxEx.bas'
 '---------------------------------------------------------------------------------------------------------
-
