@@ -15,19 +15,18 @@
 '---------------------------------------------------------------------------------------------------------
 $NOPREFIX
 $RESIZE:SMOOTH
-$COLOR:32
 $EXEICON:'./ParticleLife.ico'
-$VERSIONINFO:ProductName=Particle Life
-$VERSIONINFO:CompanyName=Samuel Gomes
-$VERSIONINFO:LegalCopyright=Copyright (c) 2023 Samuel Gomes
-$VERSIONINFO:LegalTrademarks=All trademarks are property of their respective owners
-$VERSIONINFO:Web=https://github.com/a740g
-$VERSIONINFO:Comments=https://github.com/a740g
-$VERSIONINFO:InternalName=ParticleLife
-$VERSIONINFO:OriginalFilename=ParticleLife.exe
-$VERSIONINFO:FileDescription=Particle Life executable
-$VERSIONINFO:FILEVERSION#=1,0,2,0
-$VERSIONINFO:PRODUCTVERSION#=1,0,2,0
+$VERSIONINFO:ProductName='Particle Life'
+$VERSIONINFO:CompanyName='Samuel Gomes'
+$VERSIONINFO:LegalCopyright='Copyright (c) 2023 Samuel Gomes'
+$VERSIONINFO:LegalTrademarks='All trademarks are property of their respective owners'
+$VERSIONINFO:Web='https://github.com/a740g'
+$VERSIONINFO:Comments='https://github.com/a740g'
+$VERSIONINFO:InternalName='ParticleLife'
+$VERSIONINFO:OriginalFilename='ParticleLife.exe'
+$VERSIONINFO:FileDescription='Particle Life executable'
+$VERSIONINFO:FILEVERSION#=1,0,3,0
+$VERSIONINFO:PRODUCTVERSION#=1,0,3,0
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -68,9 +67,9 @@ $VERSIONINFO:PRODUCTVERSION#=1,0,2,0
 '            //printf("If WidgetClicked(UI.cmd%c%c_RInc) Then WidgetText UI.txt%c%c_R, Str$(Val(WidgetText$(UI.txt%c%c_R)) + 1): UI.changed = TRUE\n", grp[i].in, grp[j].in, grp[i].in, grp[j].in, grp[i].in, grp[j].in);
 '            //printf("If TextBoxEntered(UI.txt%c%c_R) Then UI.changed = TRUE\n", grp[i].in, grp[j].in);
 
-'            //printf("Group(GROUP_%s).rule%i.attract = ClampLong(Val(WidgetText(UI.txt%c%c_A)), ATTRACT_MIN, ATTRACT_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("Group(GROUP_%s).rule%i.attract = Math_ClampLong(Val(WidgetText(UI.txt%c%c_A)), ATTRACT_MIN, ATTRACT_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
 '            //printf("WidgetText UI.txt%c%c_A, Str$(Group(GROUP_%s).rule%i.attract)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
-'            //printf("Group(GROUP_%s).rule%i.radius = ClampLong(Val(WidgetText(UI.txt%c%c_R)), RADIUS_MIN, RADIUS_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
+'            //printf("Group(GROUP_%s).rule%i.radius = Math_ClampLong(Val(WidgetText(UI.txt%c%c_R)), RADIUS_MIN, RADIUS_MAX)\n", grp[i].name, grp[j].id, grp[i].in, grp[j].in);
 '            //printf("WidgetText UI.txt%c%c_R, Str$(Group(GROUP_%s).rule%i.radius)\n", grp[i].in, grp[j].in, grp[i].name, grp[j].id);
 
 '            //printf("y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE\n");
@@ -232,11 +231,11 @@ REDIM SHARED GroupBlue(1 TO 1) AS ParticleType ' Blue particles
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-DIM r AS UNSIGNED LONG: r = ClampLong(VAL(COMMAND$), 1, 8) ' Check the user wants to use a lower resolution
+DIM r AS UNSIGNED LONG: r = Math_ClampLong(VAL(COMMAND$), 1, 8) ' Check the user wants to use a lower resolution
 SCREEN NEWIMAGE(DESKTOPWIDTH \ r, DESKTOPHEIGHT \ r, 32)
 FULLSCREEN SQUAREPIXELS , SMOOTH
 PRINTMODE KEEPBACKGROUND
-SetRandomSeed TIMER
+Math_SetRandomSeed TIMER
 
 ' Setup universe
 Universe.size.x = WIDTH
@@ -252,7 +251,7 @@ InitializeUI ' initialize the UI
 DO
     RunUniverse ' make the universe go
 
-    COLOR White, Black ' this is required since the UI code can change the colors
+    COLOR BGRA_WHITE, BGRA_BLACK ' this is required since the UI code can change the colors
     CLS ' clear the framebuffer
 
     ' From here on everything is drawn in z order
@@ -498,51 +497,51 @@ SUB UpdateUI
     IF TextBoxEntered(UI.txtBB_R) THEN UI.changed = TRUE
 
     IF UI.changed THEN
-        Universe.particleSize = ClampLong(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
+        Universe.particleSize = Math_ClampLong(Universe.particleSize, 0, PARTICLE_SIZE_MAX)
         WidgetText UI.txtParticleSize, STR$(Universe.particleSize)
 
         IF Universe.particlesPerGroup <> VAL(WidgetText$(UI.txtParticles)) THEN
-            Universe.particlesPerGroup = ClampLong(VAL(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
+            Universe.particlesPerGroup = Math_ClampLong(VAL(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
             WidgetText UI.txtParticles, STR$(Universe.particlesPerGroup)
             InitializeParticles
         END IF
 
         ' Update rule values (auto-generated)
-        Group(GROUP_RED).rule1.attract = ClampLong(VAL(WidgetText(UI.txtRR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule1.attract = Math_ClampLong(VAL(WidgetText(UI.txtRR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRR_A, STR$(Group(GROUP_RED).rule1.attract)
-        Group(GROUP_RED).rule1.radius = ClampLong(VAL(WidgetText(UI.txtRR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule1.radius = Math_ClampLong(VAL(WidgetText(UI.txtRR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRR_R, STR$(Group(GROUP_RED).rule1.radius)
-        Group(GROUP_RED).rule2.attract = ClampLong(VAL(WidgetText(UI.txtRG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule2.attract = Math_ClampLong(VAL(WidgetText(UI.txtRG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRG_A, STR$(Group(GROUP_RED).rule2.attract)
-        Group(GROUP_RED).rule2.radius = ClampLong(VAL(WidgetText(UI.txtRG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule2.radius = Math_ClampLong(VAL(WidgetText(UI.txtRG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRG_R, STR$(Group(GROUP_RED).rule2.radius)
-        Group(GROUP_RED).rule3.attract = ClampLong(VAL(WidgetText(UI.txtRB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_RED).rule3.attract = Math_ClampLong(VAL(WidgetText(UI.txtRB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtRB_A, STR$(Group(GROUP_RED).rule3.attract)
-        Group(GROUP_RED).rule3.radius = ClampLong(VAL(WidgetText(UI.txtRB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_RED).rule3.radius = Math_ClampLong(VAL(WidgetText(UI.txtRB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtRB_R, STR$(Group(GROUP_RED).rule3.radius)
-        Group(GROUP_GREEN).rule1.attract = ClampLong(VAL(WidgetText(UI.txtGR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule1.attract = Math_ClampLong(VAL(WidgetText(UI.txtGR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGR_A, STR$(Group(GROUP_GREEN).rule1.attract)
-        Group(GROUP_GREEN).rule1.radius = ClampLong(VAL(WidgetText(UI.txtGR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule1.radius = Math_ClampLong(VAL(WidgetText(UI.txtGR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGR_R, STR$(Group(GROUP_GREEN).rule1.radius)
-        Group(GROUP_GREEN).rule2.attract = ClampLong(VAL(WidgetText(UI.txtGG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule2.attract = Math_ClampLong(VAL(WidgetText(UI.txtGG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGG_A, STR$(Group(GROUP_GREEN).rule2.attract)
-        Group(GROUP_GREEN).rule2.radius = ClampLong(VAL(WidgetText(UI.txtGG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule2.radius = Math_ClampLong(VAL(WidgetText(UI.txtGG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGG_R, STR$(Group(GROUP_GREEN).rule2.radius)
-        Group(GROUP_GREEN).rule3.attract = ClampLong(VAL(WidgetText(UI.txtGB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_GREEN).rule3.attract = Math_ClampLong(VAL(WidgetText(UI.txtGB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtGB_A, STR$(Group(GROUP_GREEN).rule3.attract)
-        Group(GROUP_GREEN).rule3.radius = ClampLong(VAL(WidgetText(UI.txtGB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_GREEN).rule3.radius = Math_ClampLong(VAL(WidgetText(UI.txtGB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtGB_R, STR$(Group(GROUP_GREEN).rule3.radius)
-        Group(GROUP_BLUE).rule1.attract = ClampLong(VAL(WidgetText(UI.txtBR_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule1.attract = Math_ClampLong(VAL(WidgetText(UI.txtBR_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBR_A, STR$(Group(GROUP_BLUE).rule1.attract)
-        Group(GROUP_BLUE).rule1.radius = ClampLong(VAL(WidgetText(UI.txtBR_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule1.radius = Math_ClampLong(VAL(WidgetText(UI.txtBR_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBR_R, STR$(Group(GROUP_BLUE).rule1.radius)
-        Group(GROUP_BLUE).rule2.attract = ClampLong(VAL(WidgetText(UI.txtBG_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule2.attract = Math_ClampLong(VAL(WidgetText(UI.txtBG_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBG_A, STR$(Group(GROUP_BLUE).rule2.attract)
-        Group(GROUP_BLUE).rule2.radius = ClampLong(VAL(WidgetText(UI.txtBG_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule2.radius = Math_ClampLong(VAL(WidgetText(UI.txtBG_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBG_R, STR$(Group(GROUP_BLUE).rule2.radius)
-        Group(GROUP_BLUE).rule3.attract = ClampLong(VAL(WidgetText(UI.txtBB_A)), ATTRACT_MIN, ATTRACT_MAX)
+        Group(GROUP_BLUE).rule3.attract = Math_ClampLong(VAL(WidgetText(UI.txtBB_A)), ATTRACT_MIN, ATTRACT_MAX)
         WidgetText UI.txtBB_A, STR$(Group(GROUP_BLUE).rule3.attract)
-        Group(GROUP_BLUE).rule3.radius = ClampLong(VAL(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
+        Group(GROUP_BLUE).rule3.radius = Math_ClampLong(VAL(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBB_R, STR$(Group(GROUP_BLUE).rule3.radius)
 
         UI.changed = FALSE
@@ -558,7 +557,7 @@ END SUB
 ' This draws the static texts next to the UI buttons to show what they do
 SUB DrawLabels
     IF NOT UI.hideLabels THEN
-        COLOR Gray
+        COLOR BGRA_GRAY
 
         DIM AS LONG x, y
 
@@ -612,37 +611,37 @@ END SUB
 ' Draws the FPS on the top left corner of the screen if selected
 SUB DrawFPS
     IF PushButtonDepressed(UI.cmdShowFPS) THEN
-        COLOR Yellow
-        PRINTSTRING (0, 0), STR$(GetFPS) + " FPS @" + STR$(Universe.size.x) + " x" + STR$(Universe.size.y)
+        COLOR BGRA_YELLOW
+        PRINTSTRING (0, 0), STR$(Time_GetHertz) + " FPS @" + STR$(Universe.size.x) + " x" + STR$(Universe.size.y)
     END IF
 END SUB
 
 
 ' Initializes all groups
 SUB InitializeGroups
-    Group(GROUP_RED).clr = NP_Red
-    Group(GROUP_RED).rule1.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_RED).rule1.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_RED).rule2.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_RED).rule2.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_RED).rule3.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_RED).rule3.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_RED).clr = BGRA_RED
+    Group(GROUP_RED).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_RED).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_RED).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_RED).rule2.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_RED).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_RED).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
 
-    Group(GROUP_GREEN).clr = NP_Green
-    Group(GROUP_GREEN).rule1.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_GREEN).rule1.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_GREEN).rule2.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_GREEN).rule2.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_GREEN).rule3.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_GREEN).rule3.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_GREEN).clr = BGRA_GREEN
+    Group(GROUP_GREEN).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_GREEN).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_GREEN).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_GREEN).rule2.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_GREEN).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_GREEN).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
 
-    Group(GROUP_BLUE).clr = NP_Blue
-    Group(GROUP_BLUE).rule1.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_BLUE).rule1.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_BLUE).rule2.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_BLUE).rule2.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
-    Group(GROUP_BLUE).rule3.attract = GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
-    Group(GROUP_BLUE).rule3.radius = GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_BLUE).clr = BGRA_BLUE
+    Group(GROUP_BLUE).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_BLUE).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_BLUE).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_BLUE).rule2.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+    Group(GROUP_BLUE).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
+    Group(GROUP_BLUE).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
 END SUB
 
 
@@ -655,18 +654,18 @@ SUB InitializeParticles
     REDIM GroupBlue(1 TO Universe.particlesPerGroup) AS ParticleType
 
     FOR i = 1 TO Universe.particlesPerGroup
-        GroupRed(i).position.x = GetRandomBetween(50, Universe.size.x - 51)
-        GroupRed(i).position.y = GetRandomBetween(50, Universe.size.y - 51)
+        GroupRed(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
+        GroupRed(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
     NEXT
 
     FOR i = 1 TO Universe.particlesPerGroup
-        GroupGreen(i).position.x = GetRandomBetween(50, Universe.size.x - 51)
-        GroupGreen(i).position.y = GetRandomBetween(50, Universe.size.y - 51)
+        GroupGreen(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
+        GroupGreen(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
     NEXT
 
     FOR i = 1 TO Universe.particlesPerGroup
-        GroupBlue(i).position.x = GetRandomBetween(50, Universe.size.x - 51)
-        GroupBlue(i).position.y = GetRandomBetween(50, Universe.size.y - 51)
+        GroupBlue(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
+        GroupBlue(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
     NEXT
 END SUB
 
@@ -708,6 +707,22 @@ SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
         ' Check for screen bounds
         IF grp1(i).position.x < 0 OR grp1(i).position.x >= Universe.size.x THEN grp1(i).velocity.x = grp1(i).velocity.x * -1
         IF grp1(i).position.y < 0 OR grp1(i).position.y >= Universe.size.y THEN grp1(i).velocity.y = grp1(i).velocity.y * -1
+
+        'IF grp1(i).position.x < 0 THEN
+        '    grp1(i).position.x = 0
+        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
+        'ELSEIF grp1(i).position.x >= Universe.size.x THEN
+        '    grp1(i).position.x = Universe.size.x - 1
+        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
+        'END IF
+
+        'IF grp1(i).position.y < 0 THEN
+        '    grp1(i).position.y = 0
+        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
+        'ELSEIF grp1(i).position.y >= Universe.size.y THEN
+        '    grp1(i).position.y = Universe.size.y - 1
+        '    grp1(i).velocity.y = grp1(i).velocity.y * -1
+        'END IF
     NEXT
 END SUB
 
@@ -733,7 +748,7 @@ SUB DrawGroup (grp() AS ParticleType, gId AS UNSIGNED LONG)
     DIM AS UNSIGNED LONG i
 
     FOR i = 1 TO Universe.particlesPerGroup
-        CircleFill grp(i).position.x, grp(i).position.y, Universe.particleSize, Group(gId).clr
+        Graphics_DrawFilledCircle grp(i).position.x, grp(i).position.y, Universe.particleSize, Group(gId).clr
     NEXT
 END SUB
 
@@ -741,7 +756,7 @@ END SUB
 ' Draws all particles in the universe
 SUB DrawUniverse
     ' We give every group a fair chance to be on top XD
-    SELECT CASE GetRandomBetween(1, 6)
+    SELECT CASE Math_GetRandomBetween(1, 6)
         CASE 6
             DrawGroup GroupBlue(), GROUP_BLUE
             DrawGroup GroupGreen(), GROUP_GREEN
