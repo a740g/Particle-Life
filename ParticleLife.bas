@@ -1,6 +1,6 @@
 '---------------------------------------------------------------------------------------------------------
 ' Particle Life for QB64-PE
-' Copyright (c) 2023 Samuel Gomes
+' Copyright (c) 2024 Samuel Gomes
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ $RESIZE:SMOOTH
 $EXEICON:'./ParticleLife.ico'
 $VERSIONINFO:ProductName='Particle Life'
 $VERSIONINFO:CompanyName='Samuel Gomes'
-$VERSIONINFO:LegalCopyright='Copyright (c) 2023 Samuel Gomes'
+$VERSIONINFO:LegalCopyright='Copyright (c) 2024 Samuel Gomes'
 $VERSIONINFO:LegalTrademarks='All trademarks are property of their respective owners'
 $VERSIONINFO:Web='https://github.com/a740g'
 $VERSIONINFO:Comments='https://github.com/a740g'
@@ -426,9 +426,7 @@ SUB UpdateUI
 
     ' Check if the about button was clicked
     IF WidgetClicked(UI.cmdAbout) THEN
-        $IF VERSION > 3.3 THEN
-            MESSAGEBOX "About", APP_NAME + STRING$(2, KEY_ENTER) + "Copyright (c) 2023 Samuel Gomes" + STRING$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
-        $END IF
+        MESSAGEBOX "About", APP_NAME + STRING$(2, KEY_ENTER) + "Copyright (c) 2024 Samuel Gomes" + STRING$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
     END IF
 
     ' Check if the show button was pressed
