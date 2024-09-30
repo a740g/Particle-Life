@@ -6,14 +6,13 @@
 '---------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------
-'$INCLUDE:'include/MathOps.bi'
+'$INCLUDE:'include/Math/Math.bi'
 '$INCLUDE:'include/ImGUI.bi'
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
 ' METACOMMANDS
 '---------------------------------------------------------------------------------------------------------
-$NOPREFIX
 $RESIZE:SMOOTH
 $EXEICON:'./ParticleLife.ico'
 $VERSIONINFO:ProductName='Particle Life'
@@ -25,8 +24,8 @@ $VERSIONINFO:Comments='https://github.com/a740g'
 $VERSIONINFO:InternalName='ParticleLife'
 $VERSIONINFO:OriginalFilename='ParticleLife.exe'
 $VERSIONINFO:FileDescription='Particle Life executable'
-$VERSIONINFO:FILEVERSION#=1,0,3,0
-$VERSIONINFO:PRODUCTVERSION#=1,0,3,0
+$VERSIONINFO:FILEVERSION#=1,0,4,0
+$VERSIONINFO:PRODUCTVERSION#=1,0,4,0
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -118,8 +117,8 @@ CONST UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMA
 ' This defines the universe
 TYPE UniverseType
     size AS Vector2FType ' this MUST be set by the user - typically window width & height
-    particlesPerGroup AS UNSIGNED LONG ' this MUST be set by the user - typically from the UI
-    particleSize AS UNSIGNED LONG ' this may be set by the user - typically from the UI
+    particlesPerGroup AS _UNSIGNED LONG ' this MUST be set by the user - typically from the UI
+    particleSize AS _UNSIGNED LONG ' this may be set by the user - typically from the UI
 END TYPE
 
 ' This defines the rule type
@@ -130,7 +129,7 @@ END TYPE
 
 ' This defines the group
 TYPE GroupType
-    clr AS UNSIGNED LONG ' managed by InitializeGroupTable()
+    clr AS _UNSIGNED LONG ' managed by InitializeGroupTable()
     rule1 AS RuleType ' self
     rule2 AS RuleType ' other
     rule3 AS RuleType ' other
@@ -143,8 +142,8 @@ TYPE ParticleType
 END TYPE
 
 TYPE UIType ' bunch of UI widgets to change stuff
-    hideLabels AS BYTE ' should lables be hidden?
-    changed AS BYTE ' did anything significant in the UI change
+    hideLabels AS _BYTE ' should lables be hidden?
+    changed AS _BYTE ' did anything significant in the UI change
     cmdShow AS LONG ' hide / show UI
     cmdExit AS LONG ' exit button
     cmdShowFPS AS LONG ' hide / show FPS
@@ -231,15 +230,15 @@ REDIM SHARED GroupBlue(1 TO 1) AS ParticleType ' Blue particles
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-DIM r AS UNSIGNED LONG: r = Math_ClampLong(VAL(COMMAND$), 1, 8) ' Check the user wants to use a lower resolution
-SCREEN NEWIMAGE(DESKTOPWIDTH \ r, DESKTOPHEIGHT \ r, 32)
-FULLSCREEN SQUAREPIXELS , SMOOTH
-PRINTMODE KEEPBACKGROUND
+DIM r AS _UNSIGNED LONG: r = Math_ClampLong(VAL(COMMAND$), 1, 8) ' Check the user wants to use a lower resolution
+SCREEN _NEWIMAGE(_DESKTOPWIDTH \ r, _DESKTOPHEIGHT \ r, 32)
+_FULLSCREEN _SQUAREPIXELS , _SMOOTH
+_PRINTMODE _KEEPBACKGROUND
 Math_SetRandomSeed TIMER
 
 ' Setup universe
-Universe.size.x = WIDTH
-Universe.size.y = HEIGHT
+Universe.size.x = _WIDTH
+Universe.size.y = _HEIGHT
 Universe.particlesPerGroup = PARTICLES_PER_GROUP_DEFAULT
 Universe.particleSize = PARTICLE_SIZE_DEFAULT
 
@@ -261,9 +260,9 @@ DO
     DrawLabels ' draw the static text labels
     UpdateUI ' update and validate UI user values
 
-    DISPLAY ' flip the framebuffer
+    _DISPLAY ' flip the framebuffer
 
-    LIMIT FRAME_RATE_MAX ' let's not get out of control
+    _LIMIT FRAME_RATE_MAX ' let's not get out of control
 LOOP UNTIL InputManager.keyCode = KEY_ESCAPE OR WidgetClicked(UI.cmdExit)
 
 WidgetFreeAll
@@ -426,7 +425,7 @@ SUB UpdateUI
 
     ' Check if the about button was clicked
     IF WidgetClicked(UI.cmdAbout) THEN
-        MESSAGEBOX "About", APP_NAME + STRING$(2, KEY_ENTER) + "Copyright (c) 2024 Samuel Gomes" + STRING$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
+        _MESSAGEBOX "About", APP_NAME + STRING$(2, KEY_ENTER) + "Copyright (c) 2024 Samuel Gomes" + STRING$(2, KEY_ENTER) + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
     END IF
 
     ' Check if the show button was pressed
@@ -548,7 +547,7 @@ END SUB
 
 
 SUB DrawStringRightAligned (text AS STRING, x AS LONG, y AS LONG)
-    PRINTSTRING (x - LEN(text) * FONTWIDTH, y), text
+    _PRINTSTRING (x - LEN(text) * _FONTWIDTH, y), text
 END SUB
 
 
@@ -559,8 +558,8 @@ SUB DrawLabels
 
         DIM AS LONG x, y
 
-        x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE - FONTWIDTH
-        y = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) * 6 + (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ 2 - FONTHEIGHT \ 2
+        x = Universe.size.x - UI_PUSH_BUTTON_WIDTH_LARGE - 1 - UI_WIDGET_SPACE - _FONTWIDTH
+        y = (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) * 6 + (UI_WIDGET_HEIGHT + UI_WIDGET_SPACE) \ 2 - _FONTHEIGHT \ 2
         DrawStringRightAligned "Particles / Group:", x, y
         y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
         DrawStringRightAligned "Particle size:", x, y
@@ -610,7 +609,7 @@ END SUB
 SUB DrawFPS
     IF PushButtonDepressed(UI.cmdShowFPS) THEN
         COLOR BGRA_YELLOW
-        PRINTSTRING (0, 0), STR$(Time_GetHertz) + " FPS @" + STR$(Universe.size.x) + " x" + STR$(Universe.size.y)
+        _PRINTSTRING (0, 0), STR$(Time_GetHertz) + " FPS @" + STR$(Universe.size.x) + " x" + STR$(Universe.size.y)
     END IF
 END SUB
 
@@ -645,7 +644,7 @@ END SUB
 
 ' Initializes all particles in the universe
 SUB InitializeParticles
-    DIM AS UNSIGNED LONG i
+    DIM AS _UNSIGNED LONG i
 
     REDIM GroupRed(1 TO Universe.particlesPerGroup) AS ParticleType
     REDIM GroupGreen(1 TO Universe.particlesPerGroup) AS ParticleType
@@ -673,7 +672,7 @@ END SUB
 ' Grp2 is the interacting group (its value won't be modified)
 SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
     DIM AS SINGLE g, dx, dy, r, fx, fy, f
-    DIM AS UNSIGNED LONG i, j
+    DIM AS _UNSIGNED LONG i, j
 
     g = rule.attract / ATTRACT_MIN
 
@@ -742,8 +741,8 @@ END SUB
 
 
 ' Draws all particles in a group
-SUB DrawGroup (grp() AS ParticleType, gId AS UNSIGNED LONG)
-    DIM AS UNSIGNED LONG i
+SUB DrawGroup (grp() AS ParticleType, gId AS _UNSIGNED LONG)
+    DIM AS _UNSIGNED LONG i
 
     FOR i = 1 TO Universe.particlesPerGroup
         Graphics_DrawFilledCircle grp(i).position.x, grp(i).position.y, Universe.particleSize, Group(gId).clr
