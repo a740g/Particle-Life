@@ -31,7 +31,7 @@ $VERSIONINFO:PRODUCTVERSION#=1,0,4,0
 '---------------------------------------------------------------------------------------------------------
 ' UI AUTO-GENERATION CODE (https://www.onlinegdb.com/online_c++_compiler)
 '---------------------------------------------------------------------------------------------------------
-'#include <iostream>
+'#include <stdio.h>
 
 'int main()
 '{
