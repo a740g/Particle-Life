@@ -1,6 +1,6 @@
 '---------------------------------------------------------------------------------------------------------
 ' Particle Life for QB64-PE
-' Copyright (c) 2024 Samuel Gomes
+' Copyright (c) 2025 Samuel Gomes
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -15,15 +15,15 @@
 '---------------------------------------------------------------------------------------------------------
 $VERSIONINFO:ProductName='Particle Life'
 $VERSIONINFO:CompanyName='Samuel Gomes'
-$VERSIONINFO:LegalCopyright='Copyright (c) 2024 Samuel Gomes'
+$VERSIONINFO:LegalCopyright='Copyright (c) 2025 Samuel Gomes'
 $VERSIONINFO:LegalTrademarks='All trademarks are property of their respective owners'
 $VERSIONINFO:Web='https://github.com/a740g'
 $VERSIONINFO:Comments='https://github.com/a740g'
 $VERSIONINFO:InternalName='ParticleLife'
 $VERSIONINFO:OriginalFilename='ParticleLife.exe'
 $VERSIONINFO:FileDescription='Particle Life executable'
-$VERSIONINFO:FILEVERSION#=1,0,5,0
-$VERSIONINFO:PRODUCTVERSION#=1,0,5,0
+$VERSIONINFO:FILEVERSION#=1,1,0,0
+$VERSIONINFO:PRODUCTVERSION#=1,1,0,0
 $EXEICON:'./ParticleLife.ico'
 $RESIZE:SMOOTH
 '---------------------------------------------------------------------------------------------------------
@@ -88,10 +88,8 @@ $RESIZE:SMOOTH
 CONST APP_NAME = "QB64-PE Particle Life"
 
 CONST GROUPS_MAX = 3 ' maximum number of groups in the universe
-CONST PARTICLES_PER_GROUP_DEFAULT = 200 ' this is the default numbers of particles we start in each group
-CONST PARTICLES_PER_GROUP_MAX = 999 ' maximum number of particles in a group
-CONST PARTICLE_SIZE_DEFAULT = 1 ' default radius of each particle
-CONST PARTICLE_SIZE_MAX = 8 ' maximum size of each particle
+CONST PARTICLES_PER_GROUP_MAX = 10000 ' maximum number of particles in a group
+CONST PARTICLE_SIZE_MAX = 16 ' maximum size of each particle
 ' Group IDs
 CONST GROUP_RED = 1
 CONST GROUP_GREEN = 2
@@ -102,7 +100,7 @@ CONST ATTRACT_MAX = 100
 CONST RADIUS_MIN = 0
 CONST RADIUS_MAX = 200
 ' Max frame rate that we can go to
-CONST FRAME_RATE_MAX = 120
+CONST FRAME_RATE_MAX = 60
 ' UI constants
 CONST UI_WIDGET_HEIGHT = 24 ' defaut widget height
 CONST UI_WIDGET_SPACE = 2 ' space between widgets
@@ -222,36 +220,30 @@ END TYPE
 DIM SHARED UI AS UIType ' user interface controls
 DIM SHARED Universe AS UniverseType ' Universe
 DIM SHARED Group(1 TO GROUPS_MAX) AS GroupType ' Group
-REDIM SHARED GroupRed(1 TO 1) AS ParticleType ' Red particles
-REDIM SHARED GroupGreen(1 TO 1) AS ParticleType ' Green particles
-REDIM SHARED GroupBlue(1 TO 1) AS ParticleType ' Blue particles
+REDIM SHARED GroupRed(0) AS ParticleType ' red particles
+REDIM SHARED GroupGreen(0) AS ParticleType ' green particles
+REDIM SHARED GroupBlue(0) AS ParticleType ' blue particles
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
 ' PROGRAM ENTRY POINT
 '---------------------------------------------------------------------------------------------------------
-DIM r AS _UNSIGNED LONG: r = Math_ClampLong(VAL(COMMAND$), 1, 8) ' Check the user wants to use a lower resolution
-SCREEN _NEWIMAGE(_DESKTOPWIDTH \ r, _DESKTOPHEIGHT \ r, 32)
+DIM r AS SINGLE: r = Math_ClampSingle(VAL(COMMAND$), 1!, 8!) ' check the user wants to use a lower resolution
+SCREEN _NEWIMAGE(_DESKTOPWIDTH / r, _DESKTOPHEIGHT / r, 32)
 _FULLSCREEN _SQUAREPIXELS , _SMOOTH
 _PRINTMODE _KEEPBACKGROUND
 Math_SetRandomSeed TIMER
 
-' Setup universe
-Universe.size.x = _WIDTH
-Universe.size.y = _HEIGHT
-Universe.particlesPerGroup = PARTICLES_PER_GROUP_DEFAULT
-Universe.particleSize = PARTICLE_SIZE_DEFAULT
-
-InitializeGroups ' setup the groups
-InitializeParticles ' setup particles
-InitializeUI ' initialize the UI
+InitializeUniverse
+InitializeGroups
+InitializeParticles
+InitializeUI
 
 ' Main loop
 DO
-    RunUniverse ' make the universe go
+    RunUniverse
 
-    COLOR BGRA_WHITE, BGRA_BLACK ' this is required since the UI code can change the colors
-    CLS ' clear the framebuffer
+    CLS , 0 ' clear the framebuffer
 
     ' From here on everything is drawn in z order
     DrawUniverse ' draw the universe
@@ -547,7 +539,9 @@ END SUB
 
 
 SUB DrawStringRightAligned (text AS STRING, x AS LONG, y AS LONG)
+    $CHECKING:OFF
     _PRINTSTRING (x - LEN(text) * _FONTWIDTH, y), text
+    $CHECKING:ON
 END SUB
 
 
@@ -614,9 +608,23 @@ SUB DrawFPS
 END SUB
 
 
+' Initializes the universe
+SUB InitializeUniverse
+    CONST BASE_SIZE = 2560 * 1440
+    CONST PARTICLE_SIZE_DEFAULT = 3 ' default radius of each particle
+    CONST PARTICLES_PER_GROUP_DEFAULT = 500 ' this is the default numbers of particles we start in each group
+
+    Universe.size.x = _WIDTH
+    Universe.size.y = _HEIGHT
+    Universe.particlesPerGroup = PARTICLES_PER_GROUP_DEFAULT * ((Universe.size.x * Universe.size.y) / BASE_SIZE)
+    Universe.particleSize = PARTICLE_SIZE_DEFAULT * ((Universe.size.x * Universe.size.y) / BASE_SIZE)
+END SUB
+
+
 ' Initializes all groups
 SUB InitializeGroups
-    Group(GROUP_RED).clr = BGRA_RED
+
+    Group(GROUP_RED).clr = _RGBA32(255, 31, 31, 191)
     Group(GROUP_RED).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_RED).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
     Group(GROUP_RED).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
@@ -624,7 +632,7 @@ SUB InitializeGroups
     Group(GROUP_RED).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_RED).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
 
-    Group(GROUP_GREEN).clr = BGRA_GREEN
+    Group(GROUP_GREEN).clr = _RGBA32(31, 255, 31, 191)
     Group(GROUP_GREEN).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_GREEN).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
     Group(GROUP_GREEN).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
@@ -632,7 +640,7 @@ SUB InitializeGroups
     Group(GROUP_GREEN).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_GREEN).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
 
-    Group(GROUP_BLUE).clr = BGRA_BLUE
+    Group(GROUP_BLUE).clr = _RGBA32(31, 31, 255, 191)
     Group(GROUP_BLUE).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_BLUE).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
     Group(GROUP_BLUE).rule2.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
@@ -677,8 +685,8 @@ SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
     g = rule.attract / ATTRACT_MIN
 
     FOR i = 1 TO Universe.particlesPerGroup
-        fx = 0
-        fy = 0
+        fx = 0!
+        fy = 0!
         FOR j = 1 TO Universe.particlesPerGroup
             ' Calculate the distance between points using Pythagorean theorem
             dx = grp1(i).position.x - grp2(j).position.x
@@ -686,7 +694,7 @@ SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
             r = SQR(dx * dx + dy * dy)
 
             ' Calculate the force in given bounds
-            IF r > 0 AND r < rule.radius THEN
+            IF r > 0! AND r < rule.radius THEN
                 f = g / r
                 fx = fx + dx * f
                 fy = fy + dy * f
@@ -694,32 +702,25 @@ SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
         NEXT
 
         ' Calculate new velocity
-        grp1(i).velocity.x = (grp1(i).velocity.x + fx) * 0.5
-        grp1(i).velocity.y = (grp1(i).velocity.y + fy) * 0.5
+        grp1(i).velocity.x = (grp1(i).velocity.x + fx) * 0.5!
+        grp1(i).velocity.y = (grp1(i).velocity.y + fy) * 0.5!
 
         ' Update position based on velocity
         grp1(i).position.x = grp1(i).position.x + grp1(i).velocity.x
         grp1(i).position.y = grp1(i).position.y + grp1(i).velocity.y
 
-        ' Check for screen bounds
-        IF grp1(i).position.x < 0 OR grp1(i).position.x >= Universe.size.x THEN grp1(i).velocity.x = grp1(i).velocity.x * -1
-        IF grp1(i).position.y < 0 OR grp1(i).position.y >= Universe.size.y THEN grp1(i).velocity.y = grp1(i).velocity.y * -1
+        ' Wrap around screen bounds
+        IF grp1(i).position.x < 0! THEN
+            grp1(i).position.x = Universe.size.x - 1!
+        ELSEIF grp1(i).position.x >= Universe.size.x THEN
+            grp1(i).position.x = 0!
+        END IF
 
-        'IF grp1(i).position.x < 0 THEN
-        '    grp1(i).position.x = 0
-        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
-        'ELSEIF grp1(i).position.x >= Universe.size.x THEN
-        '    grp1(i).position.x = Universe.size.x - 1
-        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
-        'END IF
-
-        'IF grp1(i).position.y < 0 THEN
-        '    grp1(i).position.y = 0
-        '    grp1(i).velocity.x = grp1(i).velocity.x * -1
-        'ELSEIF grp1(i).position.y >= Universe.size.y THEN
-        '    grp1(i).position.y = Universe.size.y - 1
-        '    grp1(i).velocity.y = grp1(i).velocity.y * -1
-        'END IF
+        IF grp1(i).position.y < 0! THEN
+            grp1(i).position.y = Universe.size.y - 1!
+        ELSEIF grp1(i).position.y >= Universe.size.y THEN
+            grp1(i).position.y = 0!
+        END IF
     NEXT
 END SUB
 
