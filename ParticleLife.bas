@@ -24,8 +24,8 @@ $VERSIONINFO:Comments='https://github.com/a740g'
 $VERSIONINFO:InternalName='ParticleLife'
 $VERSIONINFO:OriginalFilename='ParticleLife.exe'
 $VERSIONINFO:FileDescription='Particle Life executable'
-$VERSIONINFO:FILEVERSION#=1,1,0,0
-$VERSIONINFO:PRODUCTVERSION#=1,1,0,0
+$VERSIONINFO:FILEVERSION#=1,1,1,0
+$VERSIONINFO:PRODUCTVERSION#=1,1,1,0
 $EXEICON:'./ParticleLife.ico'
 $RESIZE:SMOOTH
 '---------------------------------------------------------------------------------------------------------
@@ -139,6 +139,7 @@ END TYPE
 TYPE ParticleType
     position AS Vector2f ' managed by InitializeGroup() & RunUniverse()
     velocity AS Vector2f ' managed by RunUniverse()
+    groupId AS LONG ' managed by InitializeParticles()
 END TYPE
 
 TYPE UIType ' bunch of UI widgets to change stuff
@@ -222,9 +223,9 @@ END TYPE
 DIM SHARED UI AS UIType ' user interface controls
 DIM SHARED Universe AS UniverseType ' Universe
 DIM SHARED Group(1 TO GROUPS_MAX) AS GroupType ' Group
-REDIM SHARED GroupRed(0) AS ParticleType ' red particles
-REDIM SHARED GroupGreen(0) AS ParticleType ' green particles
-REDIM SHARED GroupBlue(0) AS ParticleType ' blue particles
+REDIM SHARED Particles(0) AS ParticleType ' all particles in the universe
+DIM SHARED RulesAttract(1 TO GROUPS_MAX, 1 TO GROUPS_MAX) AS SINGLE ' pre-calculated attraction rules
+DIM SHARED RulesRadius(1 TO GROUPS_MAX, 1 TO GROUPS_MAX) AS SINGLE ' pre-calculated radius rules
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -535,6 +536,7 @@ SUB UpdateUI
         Group(GROUP_BLUE).rule3.radius = Math_ClampLong(VAL(WidgetText(UI.txtBB_R)), RADIUS_MIN, RADIUS_MAX)
         WidgetText UI.txtBB_R, STR$(Group(GROUP_BLUE).rule3.radius)
 
+        UpdateRulesCache
         UI.changed = _FALSE
     END IF
 END SUB
@@ -623,9 +625,33 @@ SUB InitializeUniverse
 END SUB
 
 
+' Updates the rules cache from the Group table
+SUB UpdateRulesCache
+    RulesAttract(GROUP_RED, GROUP_RED) = Group(GROUP_RED).rule1.attract / ATTRACT_MIN
+    RulesRadius(GROUP_RED, GROUP_RED) = Group(GROUP_RED).rule1.radius
+    RulesAttract(GROUP_RED, GROUP_GREEN) = Group(GROUP_RED).rule2.attract / ATTRACT_MIN
+    RulesRadius(GROUP_RED, GROUP_GREEN) = Group(GROUP_RED).rule2.radius
+    RulesAttract(GROUP_RED, GROUP_BLUE) = Group(GROUP_RED).rule3.attract / ATTRACT_MIN
+    RulesRadius(GROUP_RED, GROUP_BLUE) = Group(GROUP_RED).rule3.radius
+
+    RulesAttract(GROUP_GREEN, GROUP_RED) = Group(GROUP_GREEN).rule1.attract / ATTRACT_MIN
+    RulesRadius(GROUP_GREEN, GROUP_RED) = Group(GROUP_GREEN).rule1.radius
+    RulesAttract(GROUP_GREEN, GROUP_GREEN) = Group(GROUP_GREEN).rule2.attract / ATTRACT_MIN
+    RulesRadius(GROUP_GREEN, GROUP_GREEN) = Group(GROUP_GREEN).rule2.radius
+    RulesAttract(GROUP_GREEN, GROUP_BLUE) = Group(GROUP_GREEN).rule3.attract / ATTRACT_MIN
+    RulesRadius(GROUP_GREEN, GROUP_BLUE) = Group(GROUP_GREEN).rule3.radius
+
+    RulesAttract(GROUP_BLUE, GROUP_RED) = Group(GROUP_BLUE).rule1.attract / ATTRACT_MIN
+    RulesRadius(GROUP_BLUE, GROUP_RED) = Group(GROUP_BLUE).rule1.radius
+    RulesAttract(GROUP_BLUE, GROUP_GREEN) = Group(GROUP_BLUE).rule2.attract / ATTRACT_MIN
+    RulesRadius(GROUP_BLUE, GROUP_GREEN) = Group(GROUP_BLUE).rule2.radius
+    RulesAttract(GROUP_BLUE, GROUP_BLUE) = Group(GROUP_BLUE).rule3.attract / ATTRACT_MIN
+    RulesRadius(GROUP_BLUE, GROUP_BLUE) = Group(GROUP_BLUE).rule3.radius
+END SUB
+
+
 ' Initializes all groups
 SUB InitializeGroups
-
     Group(GROUP_RED).clr = _RGBA32(255, 31, 31, 191)
     Group(GROUP_RED).rule1.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_RED).rule1.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
@@ -649,138 +675,123 @@ SUB InitializeGroups
     Group(GROUP_BLUE).rule2.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
     Group(GROUP_BLUE).rule3.attract = Math_GetRandomBetween(ATTRACT_MIN, ATTRACT_MAX)
     Group(GROUP_BLUE).rule3.radius = Math_GetRandomBetween(RADIUS_MIN, RADIUS_MAX)
+
+    UpdateRulesCache
 END SUB
 
 
 ' Initializes all particles in the universe
 SUB InitializeParticles
-    DIM AS _UNSIGNED LONG i
+    DIM AS _UNSIGNED LONG i, totalParticles
 
-    REDIM GroupRed(1 TO Universe.particlesPerGroup) AS ParticleType
-    REDIM GroupGreen(1 TO Universe.particlesPerGroup) AS ParticleType
-    REDIM GroupBlue(1 TO Universe.particlesPerGroup) AS ParticleType
+    totalParticles = Universe.particlesPerGroup * GROUPS_MAX
+    REDIM Particles(1 TO totalParticles) AS ParticleType
 
-    FOR i = 1 TO Universe.particlesPerGroup
-        GroupRed(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
-        GroupRed(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
-    NEXT
-
-    FOR i = 1 TO Universe.particlesPerGroup
-        GroupGreen(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
-        GroupGreen(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
-    NEXT
-
-    FOR i = 1 TO Universe.particlesPerGroup
-        GroupBlue(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
-        GroupBlue(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
+    FOR i = 1 TO totalParticles
+        Particles(i).position.x = Math_GetRandomBetween(50, Universe.size.x - 51)
+        Particles(i).position.y = Math_GetRandomBetween(50, Universe.size.y - 51)
+        Particles(i).velocity.x = 0!
+        Particles(i).velocity.y = 0!
+        Particles(i).groupId = ((i - 1) \ Universe.particlesPerGroup) + 1
     NEXT
 END SUB
 
-
-' Interaction between 2 particle groups
-' Grp1 is the group that will be modified by the interaction
-' Grp2 is the interacting group (its value won't be modified)
-SUB ApplyRule (grp1() AS ParticleType, grp2() AS ParticleType, rule AS RuleType)
-    DIM AS SINGLE g, dx, dy, r, fx, fy, f
-    DIM AS _UNSIGNED LONG i, j
-
-    g = rule.attract / ATTRACT_MIN
-
-    FOR i = 1 TO Universe.particlesPerGroup
-        fx = 0!
-        fy = 0!
-        FOR j = 1 TO Universe.particlesPerGroup
-            ' Calculate the distance between points using Pythagorean theorem
-            dx = grp1(i).position.x - grp2(j).position.x
-            dy = grp1(i).position.y - grp2(j).position.y
-            r = SQR(dx * dx + dy * dy)
-
-            ' Calculate the force in given bounds
-            IF r > 0! AND r < rule.radius THEN
-                f = g / r
-                fx = fx + dx * f
-                fy = fy + dy * f
-            END IF
-        NEXT
-
-        ' Calculate new velocity
-        grp1(i).velocity.x = (grp1(i).velocity.x + fx) * 0.5!
-        grp1(i).velocity.y = (grp1(i).velocity.y + fy) * 0.5!
-
-        ' Update position based on velocity
-        grp1(i).position.x = grp1(i).position.x + grp1(i).velocity.x
-        grp1(i).position.y = grp1(i).position.y + grp1(i).velocity.y
-
-        ' Wrap around screen bounds
-        IF grp1(i).position.x < 0! THEN
-            grp1(i).position.x = Universe.size.x - 1!
-        ELSEIF grp1(i).position.x >= Universe.size.x THEN
-            grp1(i).position.x = 0!
-        END IF
-
-        IF grp1(i).position.y < 0! THEN
-            grp1(i).position.y = Universe.size.y - 1!
-        ELSEIF grp1(i).position.y >= Universe.size.y THEN
-            grp1(i).position.y = 0!
-        END IF
-    NEXT
-END SUB
 
 
 ' This will make everything go
 SUB RunUniverse
-    ApplyRule GroupRed(), GroupRed(), Group(GROUP_RED).rule1
-    ApplyRule GroupRed(), GroupGreen(), Group(GROUP_RED).rule2
-    ApplyRule GroupRed(), GroupBlue(), Group(GROUP_RED).rule3
+    $CHECKING:OFF
+    DIM AS SINGLE fx, fy, dx, dy, d2, f, g, r2
+    DIM AS LONG i, j, g1, g2, totalParticles, n, startIdx, endIdx
+    DIM AS SINGLE viscosity, timeScale, gravity, wallRepel, wallRepelStrength
 
-    ApplyRule GroupGreen(), GroupRed(), Group(GROUP_GREEN).rule1
-    ApplyRule GroupGreen(), GroupGreen(), Group(GROUP_GREEN).rule2
-    ApplyRule GroupGreen(), GroupBlue(), Group(GROUP_GREEN).rule3
+    ' Reference-like constants
+    viscosity = 0.7!
+    timeScale = 1.0!
+    gravity = 0.0!
+    wallRepel = 40.0!
+    wallRepelStrength = 0.1!
 
-    ApplyRule GroupBlue(), GroupRed(), Group(GROUP_BLUE).rule1
-    ApplyRule GroupBlue(), GroupGreen(), Group(GROUP_BLUE).rule2
-    ApplyRule GroupBlue(), GroupBlue(), Group(GROUP_BLUE).rule3
-END SUB
+    totalParticles = UBOUND(Particles)
+    n = Universe.particlesPerGroup
 
+    ' Accumulate forces
+    FOR i = 1 TO totalParticles
+        fx = 0!
+        fy = 0!
+        g1 = Particles(i).groupId
 
-' Draws all particles in a group
-SUB DrawGroup (grp() AS ParticleType, gId AS _UNSIGNED LONG)
-    DIM AS _UNSIGNED LONG i
+        FOR g2 = 1 TO GROUPS_MAX
+            g = RulesAttract(g1, g2)
+            r2 = RulesRadius(g1, g2) * RulesRadius(g1, g2)
+            IF r2 > 0! THEN
+                startIdx = (g2 - 1) * n + 1
+                endIdx = g2 * n
+                FOR j = startIdx TO endIdx
+                    IF i = j THEN _CONTINUE
 
-    FOR i = 1 TO Universe.particlesPerGroup
-        Graphics_DrawFilledCircle grp(i).position.x, grp(i).position.y, Universe.particleSize, Group(gId).clr
+                    dx = Particles(i).position.x - Particles(j).position.x
+                    dy = Particles(i).position.y - Particles(j).position.y
+                    d2 = dx * dx + dy * dy
+
+                    IF d2 > 0! AND d2 < r2 THEN
+                        f = g / SQR(d2)
+                        fx = fx + dx * f
+                        fy = fy + dy * f
+                    END IF
+                NEXT
+            END IF
+        NEXT
+
+        ' Wall repel
+        IF wallRepel > 0! THEN
+            IF Particles(i).position.x < wallRepel THEN fx = fx + (wallRepel - Particles(i).position.x) * wallRepelStrength
+            IF Particles(i).position.x > Universe.size.x - wallRepel THEN fx = fx + (Universe.size.x - wallRepel - Particles(i).position.x) * wallRepelStrength
+            IF Particles(i).position.y < wallRepel THEN fy = fy + (wallRepel - Particles(i).position.y) * wallRepelStrength
+            IF Particles(i).position.y > Universe.size.y - wallRepel THEN fy = fy + (Universe.size.y - wallRepel - Particles(i).position.y) * wallRepelStrength
+        END IF
+
+        fy = fy + gravity
+
+        ' Update velocity
+        Particles(i).velocity.x = (Particles(i).velocity.x + fx * timeScale) * (1! - viscosity)
+        Particles(i).velocity.y = (Particles(i).velocity.y + fy * timeScale) * (1! - viscosity)
     NEXT
+
+    ' Update positions and bounce
+    FOR i = 1 TO totalParticles
+        Particles(i).position.x = Particles(i).position.x + Particles(i).velocity.x
+        Particles(i).position.y = Particles(i).position.y + Particles(i).velocity.y
+
+        ' Bounce
+        IF Particles(i).position.x < 0! THEN
+            Particles(i).position.x = -Particles(i).position.x
+            Particles(i).velocity.x = -Particles(i).velocity.x
+        ELSEIF Particles(i).position.x >= Universe.size.x THEN
+            Particles(i).position.x = 2! * Universe.size.x - Particles(i).position.x
+            Particles(i).velocity.x = -Particles(i).velocity.x
+        END IF
+
+        IF Particles(i).position.y < 0! THEN
+            Particles(i).position.y = -Particles(i).position.y
+            Particles(i).velocity.y = -Particles(i).velocity.y
+        ELSEIF Particles(i).position.y >= Universe.size.y THEN
+            Particles(i).position.y = 2! * Universe.size.y - Particles(i).position.y
+            Particles(i).velocity.y = -Particles(i).velocity.y
+        END IF
+    NEXT
+    $CHECKING:ON
 END SUB
 
 
 ' Draws all particles in the universe
 SUB DrawUniverse
-    ' We give every group a fair chance to be on top XD
-    SELECT CASE Math_GetRandomBetween(1, 6)
-        CASE 6
-            DrawGroup GroupBlue(), GROUP_BLUE
-            DrawGroup GroupGreen(), GROUP_GREEN
-            DrawGroup GroupRed(), GROUP_RED
-        CASE 5
-            DrawGroup GroupBlue(), GROUP_BLUE
-            DrawGroup GroupRed(), GROUP_RED
-            DrawGroup GroupGreen(), GROUP_GREEN
-        CASE 4
-            DrawGroup GroupGreen(), GROUP_GREEN
-            DrawGroup GroupBlue(), GROUP_BLUE
-            DrawGroup GroupRed(), GROUP_RED
-        CASE 3
-            DrawGroup GroupGreen(), GROUP_GREEN
-            DrawGroup GroupRed(), GROUP_RED
-            DrawGroup GroupBlue(), GROUP_BLUE
-        CASE 2
-            DrawGroup GroupRed(), GROUP_RED
-            DrawGroup GroupBlue(), GROUP_BLUE
-            DrawGroup GroupGreen(), GROUP_GREEN
-        CASE ELSE
-            DrawGroup GroupRed(), GROUP_RED
-            DrawGroup GroupGreen(), GROUP_GREEN
-            DrawGroup GroupBlue(), GROUP_BLUE
-    END SELECT
+    $CHECKING:OFF
+    DIM totalParticles AS LONG: totalParticles = UBOUND(Particles)
+    DIM i AS LONG
+    FOR i = 1 TO totalParticles
+        Graphics_DrawFilledCircle Particles(i).position.x, Particles(i).position.y, Universe.particleSize, Group(Particles(i).groupId).clr
+    NEXT
+    $CHECKING:ON
 END SUB
 '---------------------------------------------------------------------------------------------------------
