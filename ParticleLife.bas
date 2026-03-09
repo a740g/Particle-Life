@@ -34,21 +34,17 @@ $RESIZE:SMOOTH
 ' CONSTANTS
 '---------------------------------------------------------------------------------------------------------
 CONST APP_NAME = "QB64-PE Particle Life"
-
 CONST SCREEN_WIDTH = 1920
 CONST SCREEN_HEIGHT = 1080
-
-CONST GROUPS_COUNT = 4 ' maximum number of groups in the universe
-CONST PARTICLES_PER_GROUP_MAX = 10000 ' maximum number of particles in a group
-CONST PARTICLE_RADIUS_MAX = 16 ' maximum radius of each particle
+CONST GROUPS_COUNT = 4
+CONST PARTICLES_PER_GROUP_MAX = 10000
+CONST PARTICLE_RADIUS_MAX = 16
 CONST PARTICLE_RADIUS_DEFAULT = 1
 CONST PARTICLES_PER_GROUP_DEFAULT = 500
-' Group IDs
 CONST GROUP_RED = 1
 CONST GROUP_GREEN = 2
 CONST GROUP_CYAN = 3
 CONST GROUP_YELLOW = 4
-' Group properties limits
 CONST ATTRACTION_MIN = -100
 CONST ATTRACTION_MAX = 100
 CONST RADIUS_MIN = 0
@@ -58,11 +54,9 @@ CONST TIMESCALE_DEFAULT = 1.0!
 CONST GRAVITY_DEFAULT = 0.0!
 CONST WALL_REPEL_DEFAULT = 40.0!
 CONST WALL_REPEL_STRENGTH_DEFAULT = 0.1!
-' Max frame rate that we can go to
 CONST FRAME_RATE_TARGET = 60
-' UI constants
-CONST UI_WIDGET_HEIGHT = 16 ' default widget height
-CONST UI_WIDGET_SPACE = 2 ' space between widgets
+CONST UI_WIDGET_HEIGHT = 16
+CONST UI_WIDGET_SPACE = 2
 CONST UI_PUSH_BUTTON_WIDTH_LARGE = 120
 CONST UI_PUSH_BUTTON_WIDTH_SMALL = 24
 CONST UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMALL * 2) - (UI_WIDGET_SPACE * 2)
@@ -606,7 +600,7 @@ SUB UpdateSimulationUI
 
     ' Check if the about button was clicked
     IF WidgetClicked(UI.cmdShowAbout) THEN
-        _MESSAGEBOX "About", APP_NAME + _CHR_CR + _CHR_CR + "Copyright (c) 2024 Samuel Gomes" + _CHR_CR + _CHR_CR + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
+        _MESSAGEBOX "About", APP_NAME + _CHR_CR + _CHR_CR + "Copyright (c) 2025 Samuel Gomes" + _CHR_CR + _CHR_CR + "This was written in QB64-PE and the source code is avilable at https://github.com/a740g/Particle-Life"
     END IF
 
     ' Check if the show button was pressed
