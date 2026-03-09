@@ -6,8 +6,10 @@
 '---------------------------------------------------------------------------------------------------------
 ' HEADER FILES
 '---------------------------------------------------------------------------------------------------------
+$LET TOOLBOX64_STRICT = TRUE
 '$INCLUDE:'include/Math/Math.bi'
-'$INCLUDE:'include/ImGUI.bi'
+'$INCLUDE:'include/Math/Vector2f.bi'
+'$INCLUDE:'include/Graphics/GUI.bi'
 '---------------------------------------------------------------------------------------------------------
 
 '---------------------------------------------------------------------------------------------------------
@@ -114,7 +116,7 @@ CONST UI_TEXT_BOX_WIDTH = UI_PUSH_BUTTON_WIDTH_LARGE - (UI_PUSH_BUTTON_WIDTH_SMA
 '---------------------------------------------------------------------------------------------------------
 ' This defines the universe
 TYPE UniverseType
-    size AS Vector2FType ' this MUST be set by the user - typically window width & height
+    size AS Vector2f ' this MUST be set by the user - typically window width & height
     particlesPerGroup AS _UNSIGNED LONG ' this MUST be set by the user - typically from the UI
     particleSize AS _UNSIGNED LONG ' this may be set by the user - typically from the UI
 END TYPE
@@ -135,8 +137,8 @@ END TYPE
 
 ' This defines the particle
 TYPE ParticleType
-    position AS Vector2FType ' managed by InitializeGroup() & RunUniverse()
-    velocity AS Vector2FType ' managed by RunUniverse()
+    position AS Vector2f ' managed by InitializeGroup() & RunUniverse()
+    velocity AS Vector2f ' managed by RunUniverse()
 END TYPE
 
 TYPE UIType ' bunch of UI widgets to change stuff
@@ -255,7 +257,7 @@ DO
     _DISPLAY ' flip the framebuffer
 
     _LIMIT FRAME_RATE_MAX ' let's not get out of control
-LOOP UNTIL InputManager.keyCode = _KEY_ESC OR WidgetClicked(UI.cmdExit)
+LOOP UNTIL InputManager_PeekKeyboardKey = _KEY_ESC OR WidgetClicked(UI.cmdExit)
 
 WidgetFreeAll
 
@@ -781,11 +783,4 @@ SUB DrawUniverse
             DrawGroup GroupBlue(), GROUP_BLUE
     END SELECT
 END SUB
-'---------------------------------------------------------------------------------------------------------
-
-'---------------------------------------------------------------------------------------------------------
-' MODULE FILES
-'---------------------------------------------------------------------------------------------------------
-'$INCLUDE:'include/ImGUI.bas'
-'$INCLUDE:'include/GraphicOps.bas'
 '---------------------------------------------------------------------------------------------------------
