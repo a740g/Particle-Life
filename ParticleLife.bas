@@ -831,22 +831,21 @@ SUB UpdateSimulationUI
     END IF
 
     ' Check if a click happened and if it was NOT on the UI area
-    DIM dummy AS _BYTE
-    IF InputManager_WasMouseButtonClicked(MOUSE_BUTTON_LEFT) THEN
-        DIM AS Vector2i mpos: InputManager_GetMousePosition mpos
-        ' If mouse is to the left of the UI panel
+    DIM dummy AS _BYTE, mpos AS Vector2i
+    IF InputManager_WasMouseButtonPressed(MOUSE_BUTTON_LEFT) THEN
+        InputManager_GetMouseButtonDownPosition MOUSE_BUTTON_LEFT, mpos
         IF mpos.x < Universe.size.x THEN
             Universe.pulse = Universe.pulseDuration ' positive pulse = repel
             Universe.pulsePosition.x = mpos.x
             Universe.pulsePosition.y = mpos.y
-            dummy = InputManager_GetMouseButtonClicked(MOUSE_BUTTON_LEFT) ' consume the event
+            dummy = InputManager_GetMouseButtonPressed(MOUSE_BUTTON_LEFT) ' consume the event
         END IF
     ELSEIF InputManager_WasMouseButtonPressed(MOUSE_BUTTON_RIGHT) THEN
-        DIM AS Vector2i mpos2: InputManager_GetMousePosition mpos2
-        IF mpos2.x < Universe.size.x THEN
+        InputManager_GetMouseButtonDownPosition MOUSE_BUTTON_RIGHT, mpos
+        IF mpos.x < Universe.size.x THEN
             Universe.pulse = -Universe.pulseDuration ' negative pulse = attract
-            Universe.pulsePosition.x = mpos2.x
-            Universe.pulsePosition.y = mpos2.y
+            Universe.pulsePosition.x = mpos.x
+            Universe.pulsePosition.y = mpos.y
             dummy = InputManager_WasMouseButtonPressed(MOUSE_BUTTON_RIGHT) ' consume the event
         END IF
     END IF
