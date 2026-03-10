@@ -54,6 +54,7 @@ CONST TIMESCALE_DEFAULT = 1.0!
 CONST GRAVITY_DEFAULT = 0.0!
 CONST WALL_REPEL_DEFAULT = 40.0!
 CONST WALL_REPEL_STRENGTH_DEFAULT = 0.1!
+CONST PULSE_DURATION_DEFAULT = 10
 CONST FRAME_RATE_TARGET = 60
 CONST UI_WIDGET_HEIGHT = 16
 CONST UI_WIDGET_SPACE = 2
@@ -75,6 +76,9 @@ TYPE UniverseSettings
     gravity AS SINGLE
     wallRepel AS SINGLE
     wallRepelStrength AS SINGLE
+    pulse AS LONG ' mouse interaction pulse
+    pulsePosition AS Vector2f ' mouse interaction position
+    pulseDuration AS LONG ' mouse interaction duration
 END TYPE
 
 ' This defines the rule type
@@ -132,6 +136,9 @@ TYPE SimulationUI
     cmdWallRepelStrengthDec AS LONG
     txtWallRepelStrength AS LONG
     cmdWallRepelStrengthInc AS LONG
+    cmdPulseDurationDec AS LONG
+    txtPulseDuration AS LONG
+    cmdPulseDurationInc AS LONG
     ' Various attraction & radius controls
     cmdRR_ADec AS LONG: txtRR_A AS LONG: cmdRR_AInc AS LONG
     cmdRR_RDec AS LONG: txtRR_R AS LONG: cmdRR_RInc AS LONG
@@ -192,6 +199,9 @@ InitializeSimulationUI
 
 ' Main loop
 DO
+    InputManager_Update
+    WidgetUpdate ' update the widget system
+    UpdateSimulationUI ' update and validate UI user values
     RunUniverseSimulation
 
     CLS , 0 ' clear the framebuffer
@@ -199,9 +209,8 @@ DO
     ' From here on everything is drawn in z order
     DrawSimulationUniverse ' draw the universe
     DrawSimulationFPS ' draw the FPS
-    WidgetUpdate ' update the widget system
     DrawSimulationUILabels ' draw the static text labels
-    UpdateSimulationUI ' update and validate UI user values
+    WidgetDraw
 
     _DISPLAY ' flip the framebuffer
 
@@ -234,6 +243,7 @@ SUB InitializeSimulationUniverse
     Universe.gravity = GRAVITY_DEFAULT
     Universe.wallRepel = WALL_REPEL_DEFAULT
     Universe.wallRepelStrength = WALL_REPEL_STRENGTH_DEFAULT
+    Universe.pulseDuration = PULSE_DURATION_DEFAULT
 END SUB
 
 SUB InitializeSimulationGroups
@@ -250,66 +260,31 @@ SUB InitializeSimulationGroups
             SELECT CASE g1
                 CASE GROUP_RED
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            ParticleGroups(GROUP_RED).rule1.attraction = attractionValue
-                            ParticleGroups(GROUP_RED).rule1.radius = radiusValue
-                        CASE GROUP_GREEN
-                            ParticleGroups(GROUP_RED).rule2.attraction = attractionValue
-                            ParticleGroups(GROUP_RED).rule2.radius = radiusValue
-                        CASE GROUP_CYAN
-                            ParticleGroups(GROUP_RED).rule3.attraction = attractionValue
-                            ParticleGroups(GROUP_RED).rule3.radius = radiusValue
-                        CASE GROUP_YELLOW
-                            ParticleGroups(GROUP_RED).rule4.attraction = attractionValue
-                            ParticleGroups(GROUP_RED).rule4.radius = radiusValue
+                        CASE GROUP_RED: ParticleGroups(GROUP_RED).rule1.attraction = attractionValue: ParticleGroups(GROUP_RED).rule1.radius = radiusValue
+                        CASE GROUP_GREEN: ParticleGroups(GROUP_RED).rule2.attraction = attractionValue: ParticleGroups(GROUP_RED).rule2.radius = radiusValue
+                        CASE GROUP_CYAN: ParticleGroups(GROUP_RED).rule3.attraction = attractionValue: ParticleGroups(GROUP_RED).rule3.radius = radiusValue
+                        CASE GROUP_YELLOW: ParticleGroups(GROUP_RED).rule4.attraction = attractionValue: ParticleGroups(GROUP_RED).rule4.radius = radiusValue
                     END SELECT
-
                 CASE GROUP_GREEN
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            ParticleGroups(GROUP_GREEN).rule1.attraction = attractionValue
-                            ParticleGroups(GROUP_GREEN).rule1.radius = radiusValue
-                        CASE GROUP_GREEN
-                            ParticleGroups(GROUP_GREEN).rule2.attraction = attractionValue
-                            ParticleGroups(GROUP_GREEN).rule2.radius = radiusValue
-                        CASE GROUP_CYAN
-                            ParticleGroups(GROUP_GREEN).rule3.attraction = attractionValue
-                            ParticleGroups(GROUP_GREEN).rule3.radius = radiusValue
-                        CASE GROUP_YELLOW
-                            ParticleGroups(GROUP_GREEN).rule4.attraction = attractionValue
-                            ParticleGroups(GROUP_GREEN).rule4.radius = radiusValue
+                        CASE GROUP_RED: ParticleGroups(GROUP_GREEN).rule1.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule1.radius = radiusValue
+                        CASE GROUP_GREEN: ParticleGroups(GROUP_GREEN).rule2.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule2.radius = radiusValue
+                        CASE GROUP_CYAN: ParticleGroups(GROUP_GREEN).rule3.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule3.radius = radiusValue
+                        CASE GROUP_YELLOW: ParticleGroups(GROUP_GREEN).rule4.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule4.radius = radiusValue
                     END SELECT
-
                 CASE GROUP_CYAN
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            ParticleGroups(GROUP_CYAN).rule1.attraction = attractionValue
-                            ParticleGroups(GROUP_CYAN).rule1.radius = radiusValue
-                        CASE GROUP_GREEN
-                            ParticleGroups(GROUP_CYAN).rule2.attraction = attractionValue
-                            ParticleGroups(GROUP_CYAN).rule2.radius = radiusValue
-                        CASE GROUP_CYAN
-                            ParticleGroups(GROUP_CYAN).rule3.attraction = attractionValue
-                            ParticleGroups(GROUP_CYAN).rule3.radius = radiusValue
-                        CASE GROUP_YELLOW
-                            ParticleGroups(GROUP_CYAN).rule4.attraction = attractionValue
-                            ParticleGroups(GROUP_CYAN).rule4.radius = radiusValue
+                        CASE GROUP_RED: ParticleGroups(GROUP_CYAN).rule1.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule1.radius = radiusValue
+                        CASE GROUP_GREEN: ParticleGroups(GROUP_CYAN).rule2.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule2.radius = radiusValue
+                        CASE GROUP_CYAN: ParticleGroups(GROUP_CYAN).rule3.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule3.radius = radiusValue
+                        CASE GROUP_YELLOW: ParticleGroups(GROUP_CYAN).rule4.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule4.radius = radiusValue
                     END SELECT
-
                 CASE GROUP_YELLOW
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            ParticleGroups(GROUP_YELLOW).rule1.attraction = attractionValue
-                            ParticleGroups(GROUP_YELLOW).rule1.radius = radiusValue
-                        CASE GROUP_GREEN
-                            ParticleGroups(GROUP_YELLOW).rule2.attraction = attractionValue
-                            ParticleGroups(GROUP_YELLOW).rule2.radius = radiusValue
-                        CASE GROUP_CYAN
-                            ParticleGroups(GROUP_YELLOW).rule3.attraction = attractionValue
-                            ParticleGroups(GROUP_YELLOW).rule3.radius = radiusValue
-                        CASE GROUP_YELLOW
-                            ParticleGroups(GROUP_YELLOW).rule4.attraction = attractionValue
-                            ParticleGroups(GROUP_YELLOW).rule4.radius = radiusValue
+                        CASE GROUP_RED: ParticleGroups(GROUP_YELLOW).rule1.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule1.radius = radiusValue
+                        CASE GROUP_GREEN: ParticleGroups(GROUP_YELLOW).rule2.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule2.radius = radiusValue
+                        CASE GROUP_CYAN: ParticleGroups(GROUP_YELLOW).rule3.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule3.radius = radiusValue
+                        CASE GROUP_YELLOW: ParticleGroups(GROUP_YELLOW).rule4.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule4.radius = radiusValue
                     END SELECT
             END SELECT
         NEXT
@@ -383,6 +358,10 @@ SUB InitializeSimulationUI
     UI.cmdWallRepelStrengthDec = PushButtonNew(CHR$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, _FALSE)
     UI.txtWallRepelStrength = TextBoxNew(_TOSTR$(Universe.wallRepelStrength), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC OR TEXT_BOX_DASH OR TEXT_BOX_DOT)
     UI.cmdWallRepelStrengthInc = PushButtonNew(CHR$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, _FALSE)
+    y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+    UI.cmdPulseDurationDec = PushButtonNew(CHR$(17), x, y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, _FALSE)
+    UI.txtPulseDuration = TextBoxNew(_TOSTR$(Universe.pulseDuration), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_WIDGET_SPACE, y, UI_TEXT_BOX_WIDTH, UI_WIDGET_HEIGHT, TEXT_BOX_NUMERIC OR TEXT_BOX_DASH OR TEXT_BOX_DOT)
+    UI.cmdPulseDurationInc = PushButtonNew(CHR$(16), x + UI_PUSH_BUTTON_WIDTH_SMALL + UI_TEXT_BOX_WIDTH + (UI_WIDGET_SPACE * 2), y, UI_PUSH_BUTTON_WIDTH_SMALL, UI_WIDGET_HEIGHT, _FALSE)
 
     ' Rule widgets
     y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
@@ -549,6 +528,10 @@ SUB UpdateSimulationUI
     IF WidgetClicked(UI.cmdWallRepelStrengthDec) THEN Universe.wallRepelStrength = Universe.wallRepelStrength - 0.01!: UI.isChanged = _TRUE
     IF WidgetClicked(UI.cmdWallRepelStrengthInc) THEN Universe.wallRepelStrength = Universe.wallRepelStrength + 0.01!: UI.isChanged = _TRUE
     IF TextBoxEntered(UI.txtWallRepelStrength) THEN Universe.wallRepelStrength = VAL(WidgetText(UI.txtWallRepelStrength)): UI.isChanged = _TRUE
+
+    IF WidgetClicked(UI.cmdPulseDurationDec) THEN Universe.pulseDuration = Universe.pulseDuration - 1: UI.isChanged = _TRUE
+    IF WidgetClicked(UI.cmdPulseDurationInc) THEN Universe.pulseDuration = Universe.pulseDuration + 1: UI.isChanged = _TRUE
+    IF TextBoxEntered(UI.txtPulseDuration) THEN Universe.pulseDuration = VAL(WidgetText(UI.txtPulseDuration)): UI.isChanged = _TRUE
 
     ' Check if user clicked the reset button
     IF WidgetClicked(UI.cmdResetParticles) THEN
@@ -730,6 +713,9 @@ SUB UpdateSimulationUI
         Universe.wallRepelStrength = Math_ClampSingle(Universe.wallRepelStrength, 0!, 1!)
         WidgetText UI.txtWallRepelStrength, _TOSTR$(Universe.wallRepelStrength)
 
+        Universe.pulseDuration = Math_ClampLong(Universe.pulseDuration, 1, 100)
+        WidgetText UI.txtPulseDuration, _TOSTR$(Universe.pulseDuration)
+
         IF Universe.particlesPerGroup <> VAL(WidgetText$(UI.txtParticles)) THEN
             Universe.particlesPerGroup = Math_ClampLong(VAL(WidgetText$(UI.txtParticles)), 1, PARTICLES_PER_GROUP_MAX)
             WidgetText UI.txtParticles, _TOSTR$(Universe.particlesPerGroup)
@@ -744,50 +730,31 @@ SUB UpdateSimulationUI
                 SELECT CASE g1
                     CASE GROUP_RED
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtRR_A
-                            CASE GROUP_GREEN
-                                txtId = UI.txtRG_A
-                            CASE GROUP_CYAN
-                                txtId = UI.txtRC_A
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtRY_A
+                            CASE GROUP_RED: txtId = UI.txtRR_A
+                            CASE GROUP_GREEN: txtId = UI.txtRG_A
+                            CASE GROUP_CYAN: txtId = UI.txtRC_A
+                            CASE GROUP_YELLOW: txtId = UI.txtRY_A
                         END SELECT
-
                     CASE GROUP_GREEN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtGR_A
-                            CASE GROUP_GREEN
-                                txtId = UI.txtGG_A
-                            CASE GROUP_CYAN
-                                txtId = UI.txtGC_A
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtGY_A
+                            CASE GROUP_RED: txtId = UI.txtGR_A
+                            CASE GROUP_GREEN: txtId = UI.txtGG_A
+                            CASE GROUP_CYAN: txtId = UI.txtGC_A
+                            CASE GROUP_YELLOW: txtId = UI.txtGY_A
                         END SELECT
-
                     CASE GROUP_CYAN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtCR_A
-                            CASE GROUP_GREEN
-                                txtId = UI.txtCG_A
-                            CASE GROUP_CYAN
-                                txtId = UI.txtCC_A
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtCY_A
+                            CASE GROUP_RED: txtId = UI.txtCR_A
+                            CASE GROUP_GREEN: txtId = UI.txtCG_A
+                            CASE GROUP_CYAN: txtId = UI.txtCC_A
+                            CASE GROUP_YELLOW: txtId = UI.txtCY_A
                         END SELECT
-
                     CASE GROUP_YELLOW
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtYR_A
-                            CASE GROUP_GREEN
-                                txtId = UI.txtYG_A
-                            CASE GROUP_CYAN
-                                txtId = UI.txtYC_A
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtYY_A
+                            CASE GROUP_RED: txtId = UI.txtYR_A
+                            CASE GROUP_GREEN: txtId = UI.txtYG_A
+                            CASE GROUP_CYAN: txtId = UI.txtYC_A
+                            CASE GROUP_YELLOW: txtId = UI.txtYY_A
                         END SELECT
                 END SELECT
                 DIM attractionValue AS LONG: attractionValue = Math_ClampLong(VAL(WidgetText(txtId)), ATTRACTION_MIN, ATTRACTION_MAX)
@@ -796,50 +763,31 @@ SUB UpdateSimulationUI
                 SELECT CASE g1
                     CASE GROUP_RED
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtRR_R
-                            CASE GROUP_GREEN
-                                txtId = UI.txtRG_R
-                            CASE GROUP_CYAN
-                                txtId = UI.txtRC_R
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtRY_R
+                            CASE GROUP_RED: txtId = UI.txtRR_R
+                            CASE GROUP_GREEN: txtId = UI.txtRG_R
+                            CASE GROUP_CYAN: txtId = UI.txtRC_R
+                            CASE GROUP_YELLOW: txtId = UI.txtRY_R
                         END SELECT
-
                     CASE GROUP_GREEN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtGR_R
-                            CASE GROUP_GREEN
-                                txtId = UI.txtGG_R
-                            CASE GROUP_CYAN
-                                txtId = UI.txtGC_R
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtGY_R
+                            CASE GROUP_RED: txtId = UI.txtGR_R
+                            CASE GROUP_GREEN: txtId = UI.txtGG_R
+                            CASE GROUP_CYAN: txtId = UI.txtGC_R
+                            CASE GROUP_YELLOW: txtId = UI.txtGY_R
                         END SELECT
-
                     CASE GROUP_CYAN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtCR_R
-                            CASE GROUP_GREEN
-                                txtId = UI.txtCG_R
-                            CASE GROUP_CYAN
-                                txtId = UI.txtCC_R
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtCY_R
+                            CASE GROUP_RED: txtId = UI.txtCR_R
+                            CASE GROUP_GREEN: txtId = UI.txtCG_R
+                            CASE GROUP_CYAN: txtId = UI.txtCC_R
+                            CASE GROUP_YELLOW: txtId = UI.txtCY_R
                         END SELECT
-
                     CASE GROUP_YELLOW
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                txtId = UI.txtYR_R
-                            CASE GROUP_GREEN
-                                txtId = UI.txtYG_R
-                            CASE GROUP_CYAN
-                                txtId = UI.txtYC_R
-                            CASE GROUP_YELLOW
-                                txtId = UI.txtYY_R
+                            CASE GROUP_RED: txtId = UI.txtYR_R
+                            CASE GROUP_GREEN: txtId = UI.txtYG_R
+                            CASE GROUP_CYAN: txtId = UI.txtYC_R
+                            CASE GROUP_YELLOW: txtId = UI.txtYY_R
                         END SELECT
                 END SELECT
                 DIM radiusValue AS LONG: radiusValue = Math_ClampLong(VAL(WidgetText(txtId)), RADIUS_MIN, RADIUS_MAX)
@@ -848,66 +796,31 @@ SUB UpdateSimulationUI
                 SELECT CASE g1
                     CASE GROUP_RED
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                ParticleGroups(GROUP_RED).rule1.attraction = attractionValue
-                                ParticleGroups(GROUP_RED).rule1.radius = radiusValue
-                            CASE GROUP_GREEN
-                                ParticleGroups(GROUP_RED).rule2.attraction = attractionValue
-                                ParticleGroups(GROUP_RED).rule2.radius = radiusValue
-                            CASE GROUP_CYAN
-                                ParticleGroups(GROUP_RED).rule3.attraction = attractionValue
-                                ParticleGroups(GROUP_RED).rule3.radius = radiusValue
-                            CASE GROUP_YELLOW
-                                ParticleGroups(GROUP_RED).rule4.attraction = attractionValue
-                                ParticleGroups(GROUP_RED).rule4.radius = radiusValue
+                            CASE GROUP_RED: ParticleGroups(GROUP_RED).rule1.attraction = attractionValue: ParticleGroups(GROUP_RED).rule1.radius = radiusValue
+                            CASE GROUP_GREEN: ParticleGroups(GROUP_RED).rule2.attraction = attractionValue: ParticleGroups(GROUP_RED).rule2.radius = radiusValue
+                            CASE GROUP_CYAN: ParticleGroups(GROUP_RED).rule3.attraction = attractionValue: ParticleGroups(GROUP_RED).rule3.radius = radiusValue
+                            CASE GROUP_YELLOW: ParticleGroups(GROUP_RED).rule4.attraction = attractionValue: ParticleGroups(GROUP_RED).rule4.radius = radiusValue
                         END SELECT
-
                     CASE GROUP_GREEN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                ParticleGroups(GROUP_GREEN).rule1.attraction = attractionValue
-                                ParticleGroups(GROUP_GREEN).rule1.radius = radiusValue
-                            CASE GROUP_GREEN
-                                ParticleGroups(GROUP_GREEN).rule2.attraction = attractionValue
-                                ParticleGroups(GROUP_GREEN).rule2.radius = radiusValue
-                            CASE GROUP_CYAN
-                                ParticleGroups(GROUP_GREEN).rule3.attraction = attractionValue
-                                ParticleGroups(GROUP_GREEN).rule3.radius = radiusValue
-                            CASE GROUP_YELLOW
-                                ParticleGroups(GROUP_GREEN).rule4.attraction = attractionValue
-                                ParticleGroups(GROUP_GREEN).rule4.radius = radiusValue
+                            CASE GROUP_RED: ParticleGroups(GROUP_GREEN).rule1.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule1.radius = radiusValue
+                            CASE GROUP_GREEN: ParticleGroups(GROUP_GREEN).rule2.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule2.radius = radiusValue
+                            CASE GROUP_CYAN: ParticleGroups(GROUP_GREEN).rule3.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule3.radius = radiusValue
+                            CASE GROUP_YELLOW: ParticleGroups(GROUP_GREEN).rule4.attraction = attractionValue: ParticleGroups(GROUP_GREEN).rule4.radius = radiusValue
                         END SELECT
-
                     CASE GROUP_CYAN
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                ParticleGroups(GROUP_CYAN).rule1.attraction = attractionValue
-                                ParticleGroups(GROUP_CYAN).rule1.radius = radiusValue
-                            CASE GROUP_GREEN
-                                ParticleGroups(GROUP_CYAN).rule2.attraction = attractionValue
-                                ParticleGroups(GROUP_CYAN).rule2.radius = radiusValue
-                            CASE GROUP_CYAN
-                                ParticleGroups(GROUP_CYAN).rule3.attraction = attractionValue
-                                ParticleGroups(GROUP_CYAN).rule3.radius = radiusValue
-                            CASE GROUP_YELLOW
-                                ParticleGroups(GROUP_CYAN).rule4.attraction = attractionValue
-                                ParticleGroups(GROUP_CYAN).rule4.radius = radiusValue
+                            CASE GROUP_RED: ParticleGroups(GROUP_CYAN).rule1.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule1.radius = radiusValue
+                            CASE GROUP_GREEN: ParticleGroups(GROUP_CYAN).rule2.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule2.radius = radiusValue
+                            CASE GROUP_CYAN: ParticleGroups(GROUP_CYAN).rule3.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule3.radius = radiusValue
+                            CASE GROUP_YELLOW: ParticleGroups(GROUP_CYAN).rule4.attraction = attractionValue: ParticleGroups(GROUP_CYAN).rule4.radius = radiusValue
                         END SELECT
-
                     CASE GROUP_YELLOW
                         SELECT CASE g2
-                            CASE GROUP_RED
-                                ParticleGroups(GROUP_YELLOW).rule1.attraction = attractionValue
-                                ParticleGroups(GROUP_YELLOW).rule1.radius = radiusValue
-                            CASE GROUP_GREEN
-                                ParticleGroups(GROUP_YELLOW).rule2.attraction = attractionValue
-                                ParticleGroups(GROUP_YELLOW).rule2.radius = radiusValue
-                            CASE GROUP_CYAN
-                                ParticleGroups(GROUP_YELLOW).rule3.attraction = attractionValue
-                                ParticleGroups(GROUP_YELLOW).rule3.radius = radiusValue
-                            CASE GROUP_YELLOW
-                                ParticleGroups(GROUP_YELLOW).rule4.attraction = attractionValue
-                                ParticleGroups(GROUP_YELLOW).rule4.radius = radiusValue
+                            CASE GROUP_RED: ParticleGroups(GROUP_YELLOW).rule1.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule1.radius = radiusValue
+                            CASE GROUP_GREEN: ParticleGroups(GROUP_YELLOW).rule2.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule2.radius = radiusValue
+                            CASE GROUP_CYAN: ParticleGroups(GROUP_YELLOW).rule3.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule3.radius = radiusValue
+                            CASE GROUP_YELLOW: ParticleGroups(GROUP_YELLOW).rule4.attraction = attractionValue: ParticleGroups(GROUP_YELLOW).rule4.radius = radiusValue
                         END SELECT
                 END SELECT
             NEXT
@@ -915,6 +828,27 @@ SUB UpdateSimulationUI
 
         UpdateSimulationRulesCache
         UI.isChanged = _FALSE
+    END IF
+
+    ' Check if a click happened and if it was NOT on the UI area
+    DIM dummy AS _BYTE
+    IF InputManager_WasMouseButtonClicked(MOUSE_BUTTON_LEFT) THEN
+        DIM AS Vector2i mpos: InputManager_GetMousePosition mpos
+        ' If mouse is to the left of the UI panel
+        IF mpos.x < Universe.size.x THEN
+            Universe.pulse = Universe.pulseDuration ' positive pulse = repel
+            Universe.pulsePosition.x = mpos.x
+            Universe.pulsePosition.y = mpos.y
+            dummy = InputManager_GetMouseButtonClicked(MOUSE_BUTTON_LEFT) ' consume the event
+        END IF
+    ELSEIF InputManager_WasMouseButtonPressed(MOUSE_BUTTON_RIGHT) THEN
+        DIM AS Vector2i mpos2: InputManager_GetMousePosition mpos2
+        IF mpos2.x < Universe.size.x THEN
+            Universe.pulse = -Universe.pulseDuration ' negative pulse = attract
+            Universe.pulsePosition.x = mpos2.x
+            Universe.pulsePosition.y = mpos2.y
+            dummy = InputManager_WasMouseButtonPressed(MOUSE_BUTTON_RIGHT) ' consume the event
+        END IF
     END IF
 END SUB
 
@@ -928,66 +862,31 @@ SUB UpdateSimulationRulesCache
             SELECT CASE g1
                 CASE GROUP_RED
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            attractionValue = ParticleGroups(GROUP_RED).rule1.attraction
-                            radiusValue = ParticleGroups(GROUP_RED).rule1.radius
-                        CASE GROUP_GREEN
-                            attractionValue = ParticleGroups(GROUP_RED).rule2.attraction
-                            radiusValue = ParticleGroups(GROUP_RED).rule2.radius
-                        CASE GROUP_CYAN
-                            attractionValue = ParticleGroups(GROUP_RED).rule3.attraction
-                            radiusValue = ParticleGroups(GROUP_RED).rule3.radius
-                        CASE GROUP_YELLOW
-                            attractionValue = ParticleGroups(GROUP_RED).rule4.attraction
-                            radiusValue = ParticleGroups(GROUP_RED).rule4.radius
+                        CASE GROUP_RED: attractionValue = ParticleGroups(GROUP_RED).rule1.attraction: radiusValue = ParticleGroups(GROUP_RED).rule1.radius
+                        CASE GROUP_GREEN: attractionValue = ParticleGroups(GROUP_RED).rule2.attraction: radiusValue = ParticleGroups(GROUP_RED).rule2.radius
+                        CASE GROUP_CYAN: attractionValue = ParticleGroups(GROUP_RED).rule3.attraction: radiusValue = ParticleGroups(GROUP_RED).rule3.radius
+                        CASE GROUP_YELLOW: attractionValue = ParticleGroups(GROUP_RED).rule4.attraction: radiusValue = ParticleGroups(GROUP_RED).rule4.radius
                     END SELECT
-
                 CASE GROUP_GREEN
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            attractionValue = ParticleGroups(GROUP_GREEN).rule1.attraction
-                            radiusValue = ParticleGroups(GROUP_GREEN).rule1.radius
-                        CASE GROUP_GREEN
-                            attractionValue = ParticleGroups(GROUP_GREEN).rule2.attraction
-                            radiusValue = ParticleGroups(GROUP_GREEN).rule2.radius
-                        CASE GROUP_CYAN
-                            attractionValue = ParticleGroups(GROUP_GREEN).rule3.attraction
-                            radiusValue = ParticleGroups(GROUP_GREEN).rule3.radius
-                        CASE GROUP_YELLOW
-                            attractionValue = ParticleGroups(GROUP_GREEN).rule4.attraction
-                            radiusValue = ParticleGroups(GROUP_GREEN).rule4.radius
+                        CASE GROUP_RED: attractionValue = ParticleGroups(GROUP_GREEN).rule1.attraction: radiusValue = ParticleGroups(GROUP_GREEN).rule1.radius
+                        CASE GROUP_GREEN: attractionValue = ParticleGroups(GROUP_GREEN).rule2.attraction: radiusValue = ParticleGroups(GROUP_GREEN).rule2.radius
+                        CASE GROUP_CYAN: attractionValue = ParticleGroups(GROUP_GREEN).rule3.attraction: radiusValue = ParticleGroups(GROUP_GREEN).rule3.radius
+                        CASE GROUP_YELLOW: attractionValue = ParticleGroups(GROUP_GREEN).rule4.attraction: radiusValue = ParticleGroups(GROUP_GREEN).rule4.radius
                     END SELECT
-
                 CASE GROUP_CYAN
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            attractionValue = ParticleGroups(GROUP_CYAN).rule1.attraction
-                            radiusValue = ParticleGroups(GROUP_CYAN).rule1.radius
-                        CASE GROUP_GREEN
-                            attractionValue = ParticleGroups(GROUP_CYAN).rule2.attraction
-                            radiusValue = ParticleGroups(GROUP_CYAN).rule2.radius
-                        CASE GROUP_CYAN
-                            attractionValue = ParticleGroups(GROUP_CYAN).rule3.attraction
-                            radiusValue = ParticleGroups(GROUP_CYAN).rule3.radius
-                        CASE GROUP_YELLOW
-                            attractionValue = ParticleGroups(GROUP_CYAN).rule4.attraction
-                            radiusValue = ParticleGroups(GROUP_CYAN).rule4.radius
+                        CASE GROUP_RED: attractionValue = ParticleGroups(GROUP_CYAN).rule1.attraction: radiusValue = ParticleGroups(GROUP_CYAN).rule1.radius
+                        CASE GROUP_GREEN: attractionValue = ParticleGroups(GROUP_CYAN).rule2.attraction: radiusValue = ParticleGroups(GROUP_CYAN).rule2.radius
+                        CASE GROUP_CYAN: attractionValue = ParticleGroups(GROUP_CYAN).rule3.attraction: radiusValue = ParticleGroups(GROUP_CYAN).rule3.radius
+                        CASE GROUP_YELLOW: attractionValue = ParticleGroups(GROUP_CYAN).rule4.attraction: radiusValue = ParticleGroups(GROUP_CYAN).rule4.radius
                     END SELECT
-
                 CASE GROUP_YELLOW
                     SELECT CASE g2
-                        CASE GROUP_RED
-                            attractionValue = ParticleGroups(GROUP_YELLOW).rule1.attraction
-                            radiusValue = ParticleGroups(GROUP_YELLOW).rule1.radius
-                        CASE GROUP_GREEN
-                            attractionValue = ParticleGroups(GROUP_YELLOW).rule2.attraction
-                            radiusValue = ParticleGroups(GROUP_YELLOW).rule2.radius
-                        CASE GROUP_CYAN
-                            attractionValue = ParticleGroups(GROUP_YELLOW).rule3.attraction
-                            radiusValue = ParticleGroups(GROUP_YELLOW).rule3.radius
-                        CASE GROUP_YELLOW
-                            attractionValue = ParticleGroups(GROUP_YELLOW).rule4.attraction
-                            radiusValue = ParticleGroups(GROUP_YELLOW).rule4.radius
+                        CASE GROUP_RED: attractionValue = ParticleGroups(GROUP_YELLOW).rule1.attraction: radiusValue = ParticleGroups(GROUP_YELLOW).rule1.radius
+                        CASE GROUP_GREEN: attractionValue = ParticleGroups(GROUP_YELLOW).rule2.attraction: radiusValue = ParticleGroups(GROUP_YELLOW).rule2.radius
+                        CASE GROUP_CYAN: attractionValue = ParticleGroups(GROUP_YELLOW).rule3.attraction: radiusValue = ParticleGroups(GROUP_YELLOW).rule3.radius
+                        CASE GROUP_YELLOW: attractionValue = ParticleGroups(GROUP_YELLOW).rule4.attraction: radiusValue = ParticleGroups(GROUP_YELLOW).rule4.radius
                     END SELECT
             END SELECT
 
@@ -1036,6 +935,18 @@ SUB RunUniverseSimulation
             END IF
         NEXT
 
+        ' Mouse pulse
+        IF Universe.pulse <> 0 THEN
+            dx = AllParticles(i).position.x - Universe.pulsePosition.x
+            dy = AllParticles(i).position.y - Universe.pulsePosition.y
+            d2 = dx * dx + dy * dy
+            IF d2 > 0! THEN
+                f = 100. * Universe.pulse / (d2 * Universe.timeScale)
+                fx = fx + f * dx
+                fy = fy + f * dy
+            END IF
+        END IF
+
         ' Wall repel
         IF Universe.wallRepel > 0! THEN
             IF AllParticles(i).position.x < Universe.wallRepel THEN fx = fx + (Universe.wallRepel - AllParticles(i).position.x) * Universe.wallRepelStrength
@@ -1074,6 +985,11 @@ SUB RunUniverseSimulation
         END IF
     NEXT
 
+    ' Decay pulse
+    IF Universe.pulse <> 0 THEN
+        Universe.pulse = Universe.pulse + _IIF(Universe.pulse > 0, -1, 1)
+    END IF
+
     $CHECKING:ON
 END SUB
 
@@ -1106,6 +1022,8 @@ SUB DrawSimulationUILabels
         DrawStringRightAligned "Wall Repel:", x, y
         y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
         DrawStringRightAligned "Wall Strength:", x, y
+        y = y + UI_WIDGET_HEIGHT + UI_WIDGET_SPACE
+        DrawStringRightAligned "Pulse Duration:", x, y
 
         ' Rule labels
         DIM AS LONG g1, g2
