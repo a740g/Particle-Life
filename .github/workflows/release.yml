@@ -16,23 +16,23 @@ jobs:
           - name: Linux-x64
             os: ubuntu-latest
             asset_pattern: "qb64pe_lnx-*.tar.gz"
-            bin_name: Particle-Life
-            archive_name: Particle-Life-linux-x64.zip
+            bin_name: ParticleLife
+            archive_name: ParticleLife-linux-x64.zip
           - name: Windows-x64
             os: windows-latest
             asset_pattern: "qb64pe_win-x64-*.7z"
-            bin_name: Particle-Life.exe
-            archive_name: Particle-Life-windows-x64.zip
+            bin_name: ParticleLife.exe
+            archive_name: ParticleLife-windows-x64.zip
           - name: Windows-arm64
             os: windows-11-arm
             asset_pattern: "qb64pe_win-arm64-*.7z"
-            bin_name: Particle-Life.exe
-            archive_name: Particle-Life-windows-arm64.zip
+            bin_name: ParticleLife.exe
+            archive_name: ParticleLife-windows-arm64.zip
           - name: macOS-arm64
             os: macos-latest
             asset_pattern: "qb64pe_osx-*.tar.gz"
-            bin_name: Particle-Life
-            archive_name: Particle-Life-macos-arm64.zip
+            bin_name: ParticleLife
+            archive_name: ParticleLife-macos-arm64.zip
 
     steps:
       - name: Checkout code
@@ -84,11 +84,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            export QB64PE_PATH=$(pwd -W)/qb64_src
-            mingw32-make
+            ./qb64_src/qb64pe.exe -x -f:OptimizeCppProgram=true ParticleLife.bas -o "${{ matrix.bin_name }}"
           else
-            export QB64PE_PATH="${{ env.QB64PE_BIN_DIR }}"
-            make
+            "${{ env.QB64PE_BIN_DIR }}/qb64pe" -x ParticleLife.bas -o "${{ matrix.bin_name }}"
           fi
 
       - name: Package
